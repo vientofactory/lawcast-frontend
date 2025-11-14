@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { AlertTriangle, Bell, Plus, ExternalLink, RefreshCw, Loader2 } from 'lucide-svelte';
+	import { AlertTriangle, Bell, Plus, ExternalLink, Loader2 } from 'lucide-svelte';
 	import axios from 'axios';
-	import { PUBLIC_VITE_API_BASE_URL } from '$env/static/public';
-	import { browser } from '$app/environment';
+	import { PUBLIC_VITE_API_BASE_URL, PUBLIC_RECAPTCHA_SITE_KEY } from '$env/static/public';
 
 	const API_BASE = PUBLIC_VITE_API_BASE_URL || 'http://localhost:3001/api';
-	const RECAPTCHA_SITE_KEY = browser ? (import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY as string) || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' : '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
-
+	const RECAPTCHA_SITE_KEY = PUBLIC_RECAPTCHA_SITE_KEY || '';
 	let recaptchaLoaded = false;
 	let recaptchaWidgetId: number | null = null;
 
@@ -21,22 +19,21 @@
 	}
 
 	let recentNotices: Notice[] = [];
-	let stats = { webhooks: { total: 0, active: 0, inactive: 0 }, cache: { size: 0, lastUpdated: null, maxSize: 50 } };
+	let stats = {
+		webhooks: { total: 0, active: 0, inactive: 0 },
+		cache: { size: 0, lastUpdated: null, maxSize: 50 }
+	};
 	let newWebhookUrl = '';
 	let recaptchaToken = '';
 
 	let isInitialLoading = true;
 	let isSubmitting = false;
-	let isManualChecking = false;
 	let error = '';
 	let success = '';
 
 	onMount(async () => {
 		try {
-			await Promise.all([
-				loadRecentNotices(),
-				loadStats()
-			]);
+			await Promise.all([loadRecentNotices(), loadStats()]);
 			loadRecaptcha();
 		} catch (err) {
 			console.error('Failed to load initial data:', err);
@@ -77,9 +74,9 @@
 			script.async = true;
 			script.defer = true;
 			document.head.appendChild(script);
-			
+
 			// 전역 콜백 설정
-			(window as any).onRecaptchaLoad = () => {
+			(window as unknown as Window & { onRecaptchaLoad: () => void }).onRecaptchaLoad = () => {
 				recaptchaLoaded = true;
 				renderRecaptcha();
 			};
@@ -87,12 +84,24 @@
 	}
 
 	function renderRecaptcha() {
-		if (typeof window !== 'undefined' && (window as any).grecaptcha && recaptchaLoaded) {
+		if (
+			typeof window !== 'undefined' &&
+			(
+				window as unknown as {
+					grecaptcha: { render: (container: string, options: Record<string, unknown>) => number };
+				}
+			).grecaptcha &&
+			recaptchaLoaded
+		) {
 			const container = document.getElementById('recaptcha-container');
 			if (container && recaptchaWidgetId === null) {
-				recaptchaWidgetId = (window as any).grecaptcha.render('recaptcha-container', {
-					'sitekey': RECAPTCHA_SITE_KEY,
-					'callback': (token: string) => {
+				recaptchaWidgetId = (
+					window as unknown as {
+						grecaptcha: { render: (container: string, options: Record<string, unknown>) => number };
+					}
+				).grecaptcha.render('recaptcha-container', {
+					sitekey: RECAPTCHA_SITE_KEY,
+					callback: (token: string) => {
 						recaptchaToken = token;
 					},
 					'expired-callback': () => {
@@ -108,8 +117,14 @@
 	}
 
 	function resetRecaptcha() {
-		if (typeof window !== 'undefined' && (window as any).grecaptcha && recaptchaWidgetId !== null) {
-			(window as any).grecaptcha.reset(recaptchaWidgetId);
+		if (
+			typeof window !== 'undefined' &&
+			(window as unknown as { grecaptcha: { reset: (id: number) => void } }).grecaptcha &&
+			recaptchaWidgetId !== null
+		) {
+			(window as unknown as { grecaptcha: { reset: (id: number) => void } }).grecaptcha.reset(
+				recaptchaWidgetId
+			);
 			recaptchaToken = '';
 		}
 	}
@@ -144,29 +159,12 @@
 			newWebhookUrl = '';
 			resetRecaptcha();
 			await loadStats(); // 통계 업데이트
-		} catch (err: any) {
-			error = err.response?.data?.message || '웹훅 등록에 실패했습니다.';
+		} catch (err: unknown) {
+			const axiosError = err as { response?: { data?: { message?: string } } };
+			error = axiosError.response?.data?.message || '웹훅 등록에 실패했습니다.';
 			resetRecaptcha();
 		} finally {
 			isSubmitting = false;
-		}
-	}
-
-	async function refreshData() {
-		isManualChecking = true;
-		error = '';
-		success = '';
-
-		try {
-			await Promise.all([
-				loadRecentNotices(),
-				loadStats()
-			]);
-			success = '데이터를 새로고침했습니다.';
-		} catch (err) {
-			error = '데이터 새로고침에 실패했습니다.';
-		} finally {
-			isManualChecking = false;
 		}
 	}
 
@@ -185,6 +183,14 @@
 			return '날짜 오류';
 		}
 	}
+
+	function openExternalLink() {
+		window.open('https://news.tf.co.kr/read/ptoday/2181536.htm', '_blank', 'noopener,noreferrer');
+	}
+
+	function openNoticeLink(link: string) {
+		window.open(link, '_blank', 'noopener,noreferrer');
+	}
 </script>
 
 <svelte:head>
@@ -194,11 +200,11 @@
 
 <div class="min-h-screen bg-gray-50">
 	<!-- Header -->
-	<header class="bg-white shadow-sm border-b">
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="flex justify-between items-center py-6">
+	<header class="border-b bg-white shadow-sm">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="flex items-center justify-between py-6">
 				<div class="flex items-center space-x-3">
-					<div class="p-2 bg-blue-100 rounded-lg">
+					<div class="rounded-lg bg-blue-100 p-2">
 						<Bell class="h-8 w-8 text-blue-600" />
 					</div>
 					<div>
@@ -206,190 +212,193 @@
 						<p class="text-sm text-gray-600">국회 입법예고 디스코드 알리미</p>
 					</div>
 				</div>
-				<button
-					on:click={refreshData}
-					disabled={isManualChecking || isInitialLoading}
-					class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-				>
-					<RefreshCw class="h-4 w-4 mr-2 {isManualChecking ? 'animate-spin' : ''}" />
-					{isManualChecking ? '새로고침 중...' : '데이터 새로고침'}
-				</button>
 			</div>
 		</div>
 	</header>
 
-	<main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+	<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 		<!-- Initial Loading State -->
 		{#if isInitialLoading}
 			<div class="flex items-center justify-center py-16">
 				<div class="text-center">
-					<Loader2 class="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+					<Loader2 class="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
 					<p class="text-gray-600">데이터를 불러오는 중...</p>
 				</div>
 			</div>
 		{:else}
-		<!-- Messages -->
-		{#if error}
-			<div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-				<div class="flex items-center justify-between">
-					<div class="flex items-center">
-						<AlertTriangle class="h-5 w-5 text-red-600 mr-2" />
-						<span class="text-red-800">{error}</span>
-					</div>
-					<div class="flex space-x-2">
-						{#if error.includes('초기 데이터')}
-							<button 
-								on:click={() => location.reload()} 
-								class="text-red-600 hover:text-red-800 text-sm underline"
-							>
-								새로고침
-							</button>
-						{/if}
-						<button on:click={clearMessage} class="text-red-600 hover:text-red-800 text-lg">×</button>
-					</div>
-				</div>
-			</div>
-		{/if}
-
-		{#if success}
-			<div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-				<div class="flex items-center">
-					<div class="h-5 w-5 text-green-600 mr-2">✓</div>
-					<span class="text-green-800">{success}</span>
-					<button on:click={clearMessage} class="ml-auto text-green-600 hover:text-green-800">×</button>
-				</div>
-			</div>
-		{/if}
-
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-			<!-- Webhook Registration -->
-			<div class="bg-white rounded-lg shadow p-6">
-				<h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-					<Plus class="h-5 w-5 mr-2" />
-					웹훅 등록
-				</h2>
-				
-				<form on:submit|preventDefault={addWebhook} class="space-y-4">
-					<div>
-						<label for="webhook-url" class="block text-sm font-medium text-gray-700 mb-2">
-							Discord 웹훅 URL *
-						</label>
-						<input
-							id="webhook-url"
-							type="url"
-							bind:value={newWebhookUrl}
-							placeholder="https://discord.com/api/webhooks/..."
-							class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-							required
-						/>
-					</div>
-					
-					<!-- reCAPTCHA -->
-					<div>
-						<div id="recaptcha-container" class="mb-4"></div>
-						{#if !recaptchaLoaded}
-							<div class="text-sm text-gray-500 mb-2">
-								<Loader2 class="inline h-4 w-4 animate-spin mr-1" />
-								reCAPTCHA 로딩 중...
-							</div>
-						{/if}
-					</div>
-					
-					<button
-						type="submit"
-						disabled={isSubmitting || isInitialLoading}
-						class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center transition-colors"
-					>
-						{#if isSubmitting}
-							<Loader2 class="h-4 w-4 animate-spin mr-2" />
-							등록 중...
-						{:else}
-							<Plus class="h-4 w-4 mr-2" />
-							웹훅 등록
-						{/if}
-					</button>
-				</form>
-
-
-			</div>
-
-			<!-- Recent Notices -->
-			<div class="bg-white rounded-lg shadow p-6">
-				<h2 class="text-lg font-semibold text-gray-900 mb-4">
-					최근 입법예고 ({recentNotices.length})
-				</h2>
-				
-				{#if recentNotices.length === 0}
-					<div class="text-center py-8">
-						<div class="text-gray-400 mb-2">
-							<Bell class="h-8 w-8 mx-auto" />
+			<!-- Messages -->
+			{#if error}
+				<div class="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center">
+							<AlertTriangle class="mr-2 h-5 w-5 text-red-600" />
+							<span class="text-red-800">{error}</span>
 						</div>
-						<p class="text-gray-500">아직 수집된 입법예고가 없습니다.</p>
-						<p class="text-gray-400 text-sm mt-1">서버가 시작되면 자동으로 데이터를 수집합니다.</p>
+						<div class="flex space-x-2">
+							{#if error.includes('초기 데이터')}
+								<button
+									on:click={() => location.reload()}
+									class="text-sm text-red-600 underline hover:text-red-800"
+								>
+									새로고침
+								</button>
+							{/if}
+							<button on:click={clearMessage} class="text-lg text-red-600 hover:text-red-800"
+								>×</button
+							>
+						</div>
 					</div>
-				{:else}
-					<div class="space-y-3">
-						{#each recentNotices.slice(0, 10) as notice}
-							<div class="border border-gray-200 rounded-md p-3">
-								<div class="flex justify-between items-start mb-2">
-									<h3 class="text-sm font-medium text-gray-900 line-clamp-2">
-										{notice.subject}
-									</h3>
-									<a
-										href={notice.link}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="text-blue-600 hover:text-blue-800 ml-2"
-										title="자세히 보기"
-									>
-										<ExternalLink class="h-4 w-4" />
-									</a>
-								</div>
-								<div class="flex justify-between items-center text-xs text-gray-500">
-									<span>{notice.proposerCategory} | {notice.committee}</span>
-									<span>의견 {notice.numComments}개</span>
-								</div>
-							<div class="text-xs text-gray-400 mt-1">
-								의안번호: {notice.num}
-							</div>
-							</div>
-						{/each}
+				</div>
+			{/if}
+
+			{#if success}
+				<div class="mb-6 rounded-md border border-green-200 bg-green-50 p-4">
+					<div class="flex items-center">
+						<div class="mr-2 h-5 w-5 text-green-600">✓</div>
+						<span class="text-green-800">{success}</span>
+						<button on:click={clearMessage} class="ml-auto text-green-600 hover:text-green-800"
+							>×</button
+						>
 					</div>
-				{/if}
-			</div>
-		</div>
+				</div>
+			{/if}
 
-		<!-- Stats Section -->
-		<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-			<div class="bg-white rounded-lg shadow p-4">
-				<h3 class="text-sm font-medium text-gray-600">등록된 웹훅</h3>
-				<p class="text-2xl font-bold text-blue-600">{stats.webhooks.active}</p>
-				<p class="text-xs text-gray-500">활성 / 총 {stats.webhooks.total}개</p>
-			</div>
-			<div class="bg-white rounded-lg shadow p-4">
-				<h3 class="text-sm font-medium text-gray-600">캐시된 입법예고</h3>
-				<p class="text-2xl font-bold text-green-600">{stats.cache.size}</p>
-				<p class="text-xs text-gray-500">최대 {stats.cache.maxSize}개</p>
-			</div>
-			<div class="bg-white rounded-lg shadow p-4">
-				<h3 class="text-sm font-medium text-gray-600">마지막 업데이트</h3>
-				<p class="text-sm font-medium text-gray-900">
-					{stats.cache.lastUpdated ? formatDate(stats.cache.lastUpdated) : '없음'}
-				</p>
-			</div>
-		</div>
+			<i class="text-gray-500">
+				게임에 잠수함 패치는 있을 수 있지만,
+				<button
+					on:click={openExternalLink}
+					class="cursor-pointer border-none bg-transparent p-0 text-sky-500 underline hover:text-sky-700"
+				>
+					법안에 잠수함 패치는 있을 수 없습니다.
+				</button><br />
+				모든 사람들이 입법예고의 투명한 감시 권리를 가질 수 있는 그 날까지 LawCast는 함께합니다.
+			</i>
 
-		<!-- Info Section -->
-		<div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
-			<h3 class="text-md font-medium text-blue-900 mb-2">서비스 안내</h3>
-			<ul class="text-sm text-blue-800 space-y-1">
-				<li>• 10분마다 자동으로 새로운 입법예고를 확인합니다</li>
-				<li>• 새로운 입법예고 발견 시 Discord 웹훅으로 알림을 전송합니다</li>
-				<li>• 로그인 없이 간단하게 Discord 웹훅 URL만 등록하면 됩니다</li>
-				<li>• reCAPTCHA 인증을 통해 스팸 방지 기능을 제공합니다</li>
-				<li>• 등록된 웹훅은 비공개로 처리되며 목록에 표시되지 않습니다</li>
-			</ul>
-		</div>
+			<div class="mt-5 grid grid-cols-1 gap-8 lg:grid-cols-2">
+				<!-- Webhook Registration -->
+				<div class="rounded-lg bg-white p-6 shadow">
+					<h2 class="mb-4 flex items-center text-lg font-semibold text-gray-900">
+						<Plus class="mr-2 h-5 w-5" />
+						웹훅 등록
+					</h2>
+
+					<form on:submit|preventDefault={addWebhook} class="space-y-4">
+						<div>
+							<label for="webhook-url" class="mb-2 block text-sm font-medium text-gray-700">
+								Discord 웹훅 URL *
+							</label>
+							<input
+								id="webhook-url"
+								type="url"
+								bind:value={newWebhookUrl}
+								placeholder="https://discord.com/api/webhooks/..."
+								class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
+								required
+							/>
+						</div>
+
+						<!-- reCAPTCHA -->
+						<div>
+							<div id="recaptcha-container" class="mb-4"></div>
+							{#if !recaptchaLoaded}
+								<div class="mb-2 text-sm text-gray-500">
+									<Loader2 class="mr-1 inline h-4 w-4 animate-spin" />
+									reCAPTCHA 로딩 중...
+								</div>
+							{/if}
+						</div>
+
+						<button
+							type="submit"
+							disabled={isSubmitting || isInitialLoading}
+							class="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{#if isSubmitting}
+								<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+								등록 중...
+							{:else}
+								<Plus class="mr-2 h-4 w-4" />
+								웹훅 등록
+							{/if}
+						</button>
+					</form>
+				</div>
+
+				<!-- Recent Notices -->
+				<div class="rounded-lg bg-white p-6 shadow">
+					<h2 class="mb-4 text-lg font-semibold text-gray-900">
+						최근 입법예고 ({recentNotices.length})
+					</h2>
+
+					{#if recentNotices.length === 0}
+						<div class="py-8 text-center">
+							<div class="mb-2 text-gray-400">
+								<Bell class="mx-auto h-8 w-8" />
+							</div>
+							<p class="text-gray-500">아직 수집된 입법예고가 없습니다.</p>
+							<p class="mt-1 text-sm text-gray-400">
+								서버가 시작되면 자동으로 데이터를 수집합니다.
+							</p>
+						</div>
+					{:else}
+						<div class="space-y-3">
+							{#each recentNotices.slice(0, 10) as notice (notice.num)}
+								<div class="rounded-md border border-gray-200 p-3">
+									<div class="mb-2 flex items-start justify-between">
+										<h3 class="line-clamp-2 text-sm font-medium text-gray-900">
+											{notice.subject}
+										</h3>
+										<button
+											on:click={() => openNoticeLink(notice.link)}
+											class="ml-2 cursor-pointer border-none bg-transparent p-1 text-blue-600 hover:text-blue-800"
+											title="자세히 보기"
+										>
+											<ExternalLink class="h-4 w-4" />
+										</button>
+									</div>
+									<div class="flex items-center justify-between text-xs text-gray-500">
+										<span>{notice.proposerCategory} | {notice.committee}</span>
+										<span>의견 {notice.numComments}개</span>
+									</div>
+									<div class="mt-1 text-xs text-gray-400">
+										의안번호: {notice.num}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Stats Section -->
+			<div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+				<div class="rounded-lg bg-white p-4 shadow">
+					<h3 class="text-sm font-medium text-gray-600">등록된 웹훅</h3>
+					<p class="text-2xl font-bold text-blue-600">{stats.webhooks.active}</p>
+					<p class="text-xs text-gray-500">활성 / 총 {stats.webhooks.total}개</p>
+				</div>
+				<div class="rounded-lg bg-white p-4 shadow">
+					<h3 class="text-sm font-medium text-gray-600">캐시된 입법예고</h3>
+					<p class="text-2xl font-bold text-green-600">{stats.cache.size}</p>
+					<p class="text-xs text-gray-500">최대 {stats.cache.maxSize}개</p>
+				</div>
+				<div class="rounded-lg bg-white p-4 shadow">
+					<h3 class="text-sm font-medium text-gray-600">마지막 업데이트</h3>
+					<p class="text-sm font-medium text-gray-900">
+						{stats.cache.lastUpdated ? formatDate(stats.cache.lastUpdated) : '없음'}
+					</p>
+				</div>
+			</div>
+
+			<!-- Info Section -->
+			<div class="mt-6 rounded-md border border-blue-200 bg-blue-50 p-4">
+				<h3 class="text-md mb-2 font-medium text-blue-900">서비스 안내</h3>
+				<ul class="space-y-1 text-sm text-blue-800">
+					<li>• 10분마다 자동으로 새로운 입법예고를 확인합니다</li>
+					<li>• 새로운 입법예고 발견 시 Discord 웹훅으로 알림을 전송합니다</li>
+					<li>• 로그인 없이 간단하게 Discord 웹훅 URL만 등록하면 됩니다</li>
+				</ul>
+			</div>
 		{/if}
 	</main>
 </div>
