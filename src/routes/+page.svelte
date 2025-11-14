@@ -2,11 +2,10 @@
 	import { onMount } from 'svelte';
 	import { AlertTriangle, Bell, Plus, ExternalLink, Loader2 } from 'lucide-svelte';
 	import axios from 'axios';
-	import { API_BASE_URL, RECAPTCHA_SITE_KEY } from '$lib/config';
 	import Header from '$lib/components/Header.svelte';
 
-	const API_BASE = API_BASE_URL;
-	const RECAPTCHA_SITE_KEY_VAL = RECAPTCHA_SITE_KEY;
+	const API_BASE = process.env.PUBLIC_VITE_API_BASE_URL || 'http://localhost:3001/api';
+	const RECAPTCHA_SITE_KEY_VAL = process.env.PUBLIC_RECAPTCHA_SITE_KEY || '';
 	let recaptchaLoaded = false;
 	let recaptchaWidgetId: number | null = null;
 

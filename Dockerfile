@@ -16,14 +16,6 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
-# Accept build arguments for environment variables
-ARG PUBLIC_VITE_API_BASE_URL=http://localhost:3001/api
-ARG PUBLIC_RECAPTCHA_SITE_KEY=
-
-# Set environment variables for Vite build
-ENV PUBLIC_VITE_API_BASE_URL=$PUBLIC_VITE_API_BASE_URL
-ENV PUBLIC_RECAPTCHA_SITE_KEY=$PUBLIC_RECAPTCHA_SITE_KEY
-
 # Copy node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -47,6 +39,7 @@ RUN adduser --system --uid 1001 sveltekit
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/frontend/.env ./.env
 
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
