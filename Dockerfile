@@ -1,10 +1,9 @@
 # Frontend Dockerfile
-FROM node:22-alpine AS builder
+FROM node:22-alpine AS base
 
-# Install dependencies for building
+# Install dependencies only when needed
+FROM base AS deps
 RUN apk add --no-cache libc6-compat
-
-# Create app directory
 WORKDIR /app
 
 # Copy package files
@@ -13,44 +12,57 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
+# Build stage
+FROM base AS builder
+WORKDIR /app
+
+# Accept build arguments for environment variables
+ARG PUBLIC_VITE_API_BASE_URL=http://localhost:3001/api
+ARG PUBLIC_RECAPTCHA_SITE_KEY=
+
+# Set environment variables for Vite build
+ENV PUBLIC_VITE_API_BASE_URL=$PUBLIC_VITE_API_BASE_URL
+ENV PUBLIC_RECAPTCHA_SITE_KEY=$PUBLIC_RECAPTCHA_SITE_KEY
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
 # Copy source code
 COPY . .
-
-# Sync SvelteKit configuration
-RUN npm run prepare
 
 # Build the application
 RUN npm run build
 
 # Production stage
-FROM node:22-alpine AS runner
-
-# Install dumb-init
-RUN apk add --no-cache dumb-init
-
+FROM base AS runner
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 # Create a non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S sveltekit -u 1001
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 sveltekit
 
-# Copy built application
-COPY --from=builder --chown=sveltekit:nodejs /app/build ./build
-COPY --from=builder --chown=sveltekit:nodejs /app/package*.json ./
-COPY --from=builder --chown=sveltekit:nodejs /app/node_modules ./node_modules
+# Copy the built application
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package*.json ./
+COPY --from=deps /app/node_modules ./node_modules
 
-# Switch to non-root user
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
+
+# Change ownership of the app directory
+RUN chown -R sveltekit:nodejs /app
 USER sveltekit
 
 # Expose port
 EXPOSE 3002
 
+ENV PORT=3002
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3002', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["dumb-init", "--"]
-
-# Start the application
+# Start the server
 CMD ["node", "build"]

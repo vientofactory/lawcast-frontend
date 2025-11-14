@@ -55,6 +55,8 @@ typings/
 .env.test
 .env.production
 .env.local
+# Allow .env.example for Docker builds
+!.env.example
 
 # parcel-bundler cache
 .cache

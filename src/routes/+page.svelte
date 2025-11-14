@@ -2,11 +2,11 @@
 	import { onMount } from 'svelte';
 	import { AlertTriangle, Bell, Plus, ExternalLink, Loader2 } from 'lucide-svelte';
 	import axios from 'axios';
-	import { PUBLIC_VITE_API_BASE_URL, PUBLIC_RECAPTCHA_SITE_KEY } from '$env/static/public';
+	import { API_BASE_URL, RECAPTCHA_SITE_KEY } from '$lib/config';
 	import Header from '$lib/components/Header.svelte';
 
-	const API_BASE = PUBLIC_VITE_API_BASE_URL || 'http://localhost:3001/api';
-	const RECAPTCHA_SITE_KEY = PUBLIC_RECAPTCHA_SITE_KEY || '';
+	const API_BASE = API_BASE_URL;
+	const RECAPTCHA_SITE_KEY_VAL = RECAPTCHA_SITE_KEY;
 	let recaptchaLoaded = false;
 	let recaptchaWidgetId: number | null = null;
 
@@ -101,7 +101,7 @@
 						grecaptcha: { render: (container: string, options: Record<string, unknown>) => number };
 					}
 				).grecaptcha.render('recaptcha-container', {
-					sitekey: RECAPTCHA_SITE_KEY,
+					sitekey: RECAPTCHA_SITE_KEY_VAL,
 					callback: (token: string) => {
 						recaptchaToken = token;
 					},
