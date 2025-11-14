@@ -3,6 +3,7 @@
 	import { AlertTriangle, Bell, Plus, ExternalLink, Loader2 } from 'lucide-svelte';
 	import axios from 'axios';
 	import { PUBLIC_VITE_API_BASE_URL, PUBLIC_RECAPTCHA_SITE_KEY } from '$env/static/public';
+	import Header from '$lib/components/Header.svelte';
 
 	const API_BASE = PUBLIC_VITE_API_BASE_URL || 'http://localhost:3001/api';
 	const RECAPTCHA_SITE_KEY = PUBLIC_RECAPTCHA_SITE_KEY || '';
@@ -130,39 +131,93 @@
 	}
 
 	async function addWebhook() {
-		if (!newWebhookUrl.trim()) {
-			error = '웹훅 URL을 입력해주세요.';
+		// 초기 에러 초기화
+		error = '';
+		success = '';
+
+		// 웹훅 URL 유효성 검증
+		const validation = validateDiscordWebhookUrl(newWebhookUrl);
+		if (!validation.isValid) {
+			error = validation.message || '올바르지 않은 웹훅 URL입니다.';
 			return;
 		}
 
-		if (!newWebhookUrl.includes('discord.com/api/webhooks/')) {
-			error = '올바른 Discord 웹훅 URL을 입력해주세요.';
-			return;
-		}
-
-		if (!recaptchaToken) {
+		// reCAPTCHA 검증
+		if (!recaptchaToken || recaptchaToken.trim().length === 0) {
 			error = 'reCAPTCHA 인증을 완료해주세요.';
 			return;
 		}
 
+		// 중복 제출 방지
+		if (isSubmitting) {
+			return;
+		}
+
 		isSubmitting = true;
-		error = '';
-		success = '';
 
 		try {
-			const response = await axios.post(`${API_BASE}/webhooks`, {
-				url: newWebhookUrl,
-				recaptchaToken
-			});
+			// URL 정규화
+			const normalizedUrl = normalizeWebhookUrl(newWebhookUrl);
 
-			success = response.data.message;
-			newWebhookUrl = '';
-			resetRecaptcha();
-			await loadStats(); // 통계 업데이트
+			const response = await axios.post(
+				`${API_BASE}/webhooks`,
+				{
+					url: normalizedUrl,
+					recaptchaToken: recaptchaToken.trim()
+				},
+				{
+					timeout: 10000, // 10초 타임아웃
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				}
+			);
+
+			if (response.data.success) {
+				success = response.data.message || '웹훅이 성공적으로 등록되었습니다.';
+				newWebhookUrl = '';
+				resetRecaptcha();
+				await loadStats(); // 통계 업데이트
+			} else {
+				error = response.data.message || '웹훅 등록에 실패했습니다.';
+				resetRecaptcha();
+			}
 		} catch (err: unknown) {
-			const axiosError = err as { response?: { data?: { message?: string } } };
-			error = axiosError.response?.data?.message || '웹훅 등록에 실패했습니다.';
 			resetRecaptcha();
+
+			if (axios.isAxiosError(err)) {
+				const response = err.response;
+
+				if (response?.status === 400) {
+					// 유효성 검증 오류
+					if (response.data?.errors && Array.isArray(response.data.errors)) {
+						error = response.data.errors.join(' ');
+					} else {
+						error = response.data?.message || '입력 데이터가 올바르지 않습니다.';
+					}
+				} else if (response?.status === 409) {
+					// 중복 URL
+					error = '이미 등록된 웹훅 URL입니다.';
+				} else if (response?.status === 429) {
+					// 너무 많은 요청
+					error = '너무 많은 웹훅이 등록되어 있습니다.';
+				} else if (response && response.status >= 500) {
+					// 서버 오류
+					error = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+				} else {
+					error = response?.data?.message || '웹훅 등록에 실패했습니다.';
+				}
+			} else if (err instanceof Error) {
+				if (err.name === 'TimeoutError' || err.message.includes('timeout')) {
+					error = '요청 시간이 초과되었습니다. 다시 시도해주세요.';
+				} else if (err.message.includes('Network Error')) {
+					error = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
+				} else {
+					error = '웹훅 등록 중 오류가 발생했습니다.';
+				}
+			} else {
+				error = '예상치 못한 오류가 발생했습니다.';
+			}
 		} finally {
 			isSubmitting = false;
 		}
@@ -191,6 +246,81 @@
 	function openNoticeLink(link: string) {
 		window.open(link, '_blank', 'noopener,noreferrer');
 	}
+
+	function validateDiscordWebhookUrl(url: string): { isValid: boolean; message?: string } {
+		if (!url || !url.trim()) {
+			return { isValid: false, message: '웹훅 URL을 입력해주세요.' };
+		}
+
+		// URL 길이 검증
+		if (url.length > 500) {
+			return { isValid: false, message: 'URL이 너무 깁니다. (500자 이내)' };
+		}
+
+		// 기본 URL 형식 검증
+		try {
+			 
+			const parsedUrl = new URL(url);
+
+			// HTTPS 프로토콜 강제
+			if (parsedUrl.protocol !== 'https:') {
+				return { isValid: false, message: 'HTTPS URL만 지원됩니다.' };
+			}
+
+			// Discord 도메인 검증
+			if (parsedUrl.hostname !== 'discord.com' && parsedUrl.hostname !== 'discordapp.com') {
+				return { isValid: false, message: 'Discord 웹훅 URL만 지원됩니다.' };
+			}
+
+			// 웹훅 경로 검증
+			if (!parsedUrl.pathname.startsWith('/api/webhooks/')) {
+				return { isValid: false, message: '올바른 Discord 웹훅 URL 형식이 아닙니다.' };
+			}
+
+			// 웹훅 경로 구조 검증
+			const pathParts = parsedUrl.pathname.split('/');
+			if (pathParts.length < 5 || !pathParts[3] || !pathParts[4]) {
+				return { isValid: false, message: '웹훅 URL에 필요한 정보가 누락되었습니다.' };
+			}
+
+			const webhookId = pathParts[3];
+			const webhookToken = pathParts[4];
+
+			// 웹훅 ID 형식 검증 (Discord Snowflake)
+			if (!/^\d{17,20}$/.test(webhookId)) {
+				return { isValid: false, message: '올바르지 않은 웹훅 ID 형식입니다.' };
+			}
+
+			// 웹훅 토큰 형식 검증
+			if (!/^[a-zA-Z0-9_-]{64,68}$/.test(webhookToken)) {
+				return { isValid: false, message: '올바르지 않은 웹훅 토큰 형식입니다.' };
+			}
+
+			return { isValid: true };
+		} catch {
+			return { isValid: false, message: '올바르지 않은 URL 형식입니다.' };
+		}
+	}
+
+	function normalizeWebhookUrl(url: string): string {
+		try {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
+			const parsed = new URL(url.trim());
+			// 쿼리 파라미터와 해시 제거
+			parsed.search = '';
+			parsed.hash = '';
+
+			let normalizedPath = parsed.pathname;
+			// 끝의 슬래시 제거
+			if (normalizedPath.endsWith('/') && normalizedPath.length > 1) {
+				normalizedPath = normalizedPath.slice(0, -1);
+			}
+
+			return `${parsed.protocol}//${parsed.host}${normalizedPath}`;
+		} catch {
+			return url.trim();
+		}
+	}
 </script>
 
 <svelte:head>
@@ -199,22 +329,8 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Header -->
-	<header class="border-b bg-white shadow-sm">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<div class="flex items-center justify-between py-6">
-				<div class="flex items-center space-x-3">
-					<div class="rounded-lg bg-blue-100 p-2">
-						<Bell class="h-8 w-8 text-blue-600" />
-					</div>
-					<div>
-						<h1 class="text-2xl font-bold text-gray-900">LawCast</h1>
-						<p class="text-sm text-gray-600">국회 입법예고 디스코드 알리미</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</header>
+	<Header />
+
 
 	<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 		<!-- Initial Loading State -->
@@ -264,13 +380,7 @@
 			{/if}
 
 			<i class="text-gray-500">
-				게임에 잠수함 패치는 있을 수 있지만,
-				<button
-					on:click={openExternalLink}
-					class="cursor-pointer border-none bg-transparent p-0 text-sky-500 underline hover:text-sky-700"
-				>
-					법안에 잠수함 패치는 있을 수 없습니다.
-				</button><br />
+				게임에 잠수함 패치는 있을 수 있지만, 법안에 잠수함 패치는 있을 수 없습니다.<br />
 				모든 사람들이 입법예고의 투명한 감시 권리를 가질 수 있는 그 날까지 LawCast는 함께합니다.
 			</i>
 
@@ -293,8 +403,16 @@
 								bind:value={newWebhookUrl}
 								placeholder="https://discord.com/api/webhooks/..."
 								class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
+								maxlength="500"
+								autocomplete="off"
+								spellcheck="false"
 								required
 							/>
+							{#if newWebhookUrl && !validateDiscordWebhookUrl(newWebhookUrl).isValid}
+								<p class="mt-1 text-sm text-red-600">
+									{validateDiscordWebhookUrl(newWebhookUrl).message}
+								</p>
+							{/if}
 						</div>
 
 						<!-- reCAPTCHA -->
@@ -326,9 +444,20 @@
 
 				<!-- Recent Notices -->
 				<div class="rounded-lg bg-white p-6 shadow">
-					<h2 class="mb-4 text-lg font-semibold text-gray-900">
-						최근 입법예고 ({recentNotices.length})
-					</h2>
+					<div class="mb-4 flex items-center justify-between">
+						<h2 class="text-lg font-semibold text-gray-900">
+							최근 입법예고 ({recentNotices.length})
+						</h2>
+						{#if recentNotices.length > 0}
+							<a 
+								href="/notices"
+								class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center"
+							>
+								전체 보기
+								<ExternalLink class="ml-1 h-4 w-4" />
+							</a>
+						{/if}
+					</div>
 
 					{#if recentNotices.length === 0}
 						<div class="py-8 text-center">
@@ -342,7 +471,7 @@
 						</div>
 					{:else}
 						<div class="space-y-3">
-							{#each recentNotices.slice(0, 10) as notice (notice.num)}
+							{#each recentNotices.slice(0, 5) as notice (notice.num)}
 								<div class="rounded-md border border-gray-200 p-3">
 									<div class="mb-2 flex items-start justify-between">
 										<h3 class="line-clamp-2 text-sm font-medium text-gray-900">
@@ -350,7 +479,7 @@
 										</h3>
 										<button
 											on:click={() => openNoticeLink(notice.link)}
-											class="ml-2 cursor-pointer border-none bg-transparent p-1 text-blue-600 hover:text-blue-800"
+											class="ml-2 shrink-0 border-none bg-transparent p-1 text-blue-600 hover:text-blue-800"
 											title="자세히 보기"
 										>
 											<ExternalLink class="h-4 w-4" />
@@ -366,6 +495,18 @@
 								</div>
 							{/each}
 						</div>
+						
+						{#if recentNotices.length > 5}
+							<div class="mt-4 text-center">
+								<a 
+									href="/notices"
+									class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+								>
+									<Plus class="mr-1 h-4 w-4" />
+									{recentNotices.length - 5}개 더 보기
+								</a>
+							</div>
+						{/if}
 					{/if}
 				</div>
 			</div>
@@ -374,8 +515,8 @@
 			<div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
 				<div class="rounded-lg bg-white p-4 shadow">
 					<h3 class="text-sm font-medium text-gray-600">등록된 웹훅</h3>
-					<p class="text-2xl font-bold text-blue-600">{stats.webhooks.active}</p>
-					<p class="text-xs text-gray-500">활성 / 총 {stats.webhooks.total}개</p>
+					<p class="text-2xl font-bold text-blue-600">{stats.webhooks.active.toLocaleString()}</p>
+					<p class="text-xs text-gray-500">활성 / 총 {stats.webhooks.total.toLocaleString()}개</p>
 				</div>
 				<div class="rounded-lg bg-white p-4 shadow">
 					<h3 class="text-sm font-medium text-gray-600">캐시된 입법예고</h3>
