@@ -26,9 +26,6 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy source code
 COPY . .
 
-# Remove unnecessary files but keep .env files for build
-RUN find . -name "node_modules" -type d -exec rm -rf {} + 2>/dev/null || true
-
 # Set environment variables for build
 ENV PUBLIC_VITE_API_BASE_URL=${PUBLIC_VITE_API_BASE_URL}
 ENV PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}
