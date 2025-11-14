@@ -43,10 +43,7 @@
 		window.open(link, '_blank', 'noopener,noreferrer');
 	}
 
-	$: paginatedNotices = notices.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
-	);
+	$: paginatedNotices = notices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 	$: totalPages = Math.ceil(notices.length / itemsPerPage);
 
@@ -54,21 +51,6 @@
 		if (page >= 1 && page <= totalPages) {
 			currentPage = page;
 			window.scrollTo({ top: 0, behavior: 'smooth' });
-		}
-	}
-
-	function formatDate(dateString: string | null) {
-		if (!dateString) return '날짜 정보 없음';
-		try {
-			const date = new Date(dateString);
-			if (isNaN(date.getTime())) return '날짜 오류';
-			return date.toLocaleDateString('ko-KR', {
-				year: 'numeric',
-				month: 'long',
-				day: 'numeric'
-			});
-		} catch {
-			return '날짜 오류';
 		}
 	}
 </script>
@@ -84,7 +66,7 @@
 	<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 		<!-- Breadcrumb -->
 		<nav class="mb-6 flex items-center space-x-2 text-sm text-gray-600">
-			<a href="/" class="flex items-center hover:text-gray-900">
+			<a href="../" class="flex items-center hover:text-gray-900">
 				<ArrowLeft class="mr-1 h-4 w-4" />
 				메인으로
 			</a>
@@ -130,25 +112,29 @@
 			<!-- Notices List -->
 			<div class="space-y-4">
 				{#each paginatedNotices as notice (notice.num)}
-					<div class="rounded-lg bg-white p-6 shadow hover:shadow-md transition-shadow">
+					<div class="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md">
 						<div class="flex items-start justify-between">
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center space-x-2 mb-3">
-									<span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+							<div class="min-w-0 flex-1">
+								<div class="mb-3 flex items-center space-x-2">
+									<span
+										class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+									>
 										의안번호 {notice.num}
 									</span>
 									{#if notice.numComments > 0}
-										<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
+										<span
+											class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700"
+										>
 											<Users class="mr-1 h-3 w-3" />
 											의견 {notice.numComments}개
 										</span>
 									{/if}
 								</div>
-								
-								<h3 class="text-lg font-semibold text-gray-900 mb-3 leading-tight">
+
+								<h3 class="mb-3 text-lg leading-tight font-semibold text-gray-900">
 									{notice.subject}
 								</h3>
-								
+
 								<div class="flex flex-wrap gap-4 text-sm text-gray-600">
 									<div class="flex items-center">
 										<Calendar class="mr-1 h-4 w-4" />
@@ -160,10 +146,10 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<button
 								on:click={() => openNoticeLink(notice.link)}
-								class="ml-4 shrink-0 rounded-md bg-blue-50 p-3 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+								class="ml-4 shrink-0 rounded-md bg-blue-50 p-3 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
 								title="자세히 보기"
 							>
 								<ExternalLink class="h-5 w-5" />
@@ -183,12 +169,12 @@
 					>
 						이전
 					</button>
-					
+
 					{#each Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
 						const start = Math.max(1, currentPage - 2);
 						const end = Math.min(totalPages, start + 4);
 						return start + i <= end ? start + i : null;
-					}).filter(Boolean) as page}
+					}).filter((page): page is number => page !== null) as page (page)}
 						<button
 							on:click={() => goToPage(page)}
 							class={`rounded-md px-3 py-2 text-sm font-medium ${
@@ -200,7 +186,6 @@
 							{page}
 						</button>
 					{/each}
-					
 					<button
 						on:click={() => goToPage(currentPage + 1)}
 						disabled={currentPage === totalPages}
@@ -209,9 +194,12 @@
 						다음
 					</button>
 				</div>
-				
+
 				<div class="mt-4 text-center text-sm text-gray-600">
-					{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, notices.length)} / {notices.length}개
+					{(currentPage - 1) * itemsPerPage + 1}-{Math.min(
+						currentPage * itemsPerPage,
+						notices.length
+					)} / {notices.length}개
 				</div>
 			{/if}
 		{/if}
@@ -222,7 +210,7 @@
 	a {
 		text-decoration: none;
 	}
-	
+
 	a:hover {
 		text-decoration: none;
 	}

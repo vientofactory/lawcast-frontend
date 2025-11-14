@@ -5,7 +5,7 @@
 <header class="border-b bg-white shadow-sm">
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 		<div class="flex items-center justify-between py-6">
-			<a href="/" class="flex items-center space-x-3 text-decoration-none">
+			<a href="/" class="text-decoration-none flex items-center space-x-3">
 				<div class="rounded-lg bg-blue-100 p-2">
 					<Bell class="h-8 w-8 text-blue-600" />
 				</div>
@@ -23,7 +23,7 @@
 		text-decoration: none;
 		color: inherit;
 	}
-	
+
 	a:hover {
 		color: inherit;
 	}

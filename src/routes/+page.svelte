@@ -239,10 +239,6 @@
 		}
 	}
 
-	function openExternalLink() {
-		window.open('https://news.tf.co.kr/read/ptoday/2181536.htm', '_blank', 'noopener,noreferrer');
-	}
-
 	function openNoticeLink(link: string) {
 		window.open(link, '_blank', 'noopener,noreferrer');
 	}
@@ -259,7 +255,6 @@
 
 		// 기본 URL 형식 검증
 		try {
-			 
 			const parsedUrl = new URL(url);
 
 			// HTTPS 프로토콜 강제
@@ -330,7 +325,6 @@
 
 <div class="min-h-screen bg-gray-50">
 	<Header />
-
 
 	<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 		<!-- Initial Loading State -->
@@ -449,9 +443,9 @@
 							최근 입법예고 ({recentNotices.length})
 						</h2>
 						{#if recentNotices.length > 0}
-							<a 
-								href="/notices"
-								class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center"
+							<a
+								href="./notices"
+								class="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
 							>
 								전체 보기
 								<ExternalLink class="ml-1 h-4 w-4" />
@@ -495,11 +489,11 @@
 								</div>
 							{/each}
 						</div>
-						
+
 						{#if recentNotices.length > 5}
 							<div class="mt-4 text-center">
-								<a 
-									href="/notices"
+								<a
+									href="./notices"
 									class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
 								>
 									<Plus class="mr-1 h-4 w-4" />
