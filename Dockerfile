@@ -30,6 +30,12 @@ COPY . .
 ENV PUBLIC_VITE_API_BASE_URL=${PUBLIC_VITE_API_BASE_URL}
 ENV PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}
 
+# Debug: Print environment variables before build
+RUN echo "Build-time environment variables:" && \
+    echo "PUBLIC_VITE_API_BASE_URL=${PUBLIC_VITE_API_BASE_URL}" && \
+    echo "PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}" && \
+    echo "NODE_ENV=${NODE_ENV}"
+
 # Build the application with environment variables
 RUN npm run build
 
@@ -46,6 +52,12 @@ ARG PUBLIC_RECAPTCHA_SITE_KEY
 # Set runtime environment variables
 ENV PUBLIC_VITE_API_BASE_URL=${PUBLIC_VITE_API_BASE_URL}
 ENV PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}
+
+# Debug: Print runtime environment variables
+RUN echo "Runtime environment variables:" && \
+    echo "PUBLIC_VITE_API_BASE_URL=${PUBLIC_VITE_API_BASE_URL}" && \
+    echo "PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}" && \
+    echo "NODE_ENV=${NODE_ENV}"
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs

@@ -3,10 +3,15 @@
 	import { AlertTriangle, Bell, Plus, ExternalLink, Loader2 } from 'lucide-svelte';
 	import axios from 'axios';
 	import Header from '$lib/components/Header.svelte';
-	import { PUBLIC_VITE_API_BASE_URL, PUBLIC_RECAPTCHA_SITE_KEY } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
+	import { 
+		PUBLIC_VITE_API_BASE_URL as STATIC_API_URL, 
+		PUBLIC_RECAPTCHA_SITE_KEY as STATIC_RECAPTCHA_KEY 
+	} from '$env/static/public';
 
-	const API_BASE = PUBLIC_VITE_API_BASE_URL || 'http://localhost:3001/api';
-	const RECAPTCHA_SITE_KEY_VAL = PUBLIC_RECAPTCHA_SITE_KEY || '';
+	// Try dynamic env first, fallback to static, then to defaults
+	const API_BASE = env.PUBLIC_VITE_API_BASE_URL || STATIC_API_URL || 'http://localhost:3001/api';
+	const RECAPTCHA_SITE_KEY_VAL = env.PUBLIC_RECAPTCHA_SITE_KEY || STATIC_RECAPTCHA_KEY || '';
 	let recaptchaLoaded = false;
 	let recaptchaWidgetId: number | null = null;
 
