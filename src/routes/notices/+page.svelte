@@ -3,11 +3,10 @@
 	import { Bell, ExternalLink, Loader2, ArrowLeft, Calendar, Users } from 'lucide-svelte';
 	import axios from 'axios';
 	import Header from '$lib/components/Header.svelte';
-	import { env } from '$env/dynamic/public';
-	import { PUBLIC_API_BASE_URL as STATIC_API_URL } from '$env/static/public';
+	import { envConfig, loadEnvironmentConfig } from '$lib/stores/env';
 
-	// Try dynamic env first, fallback to static, then to default
-	const API_BASE = env.PUBLIC_API_BASE_URL || STATIC_API_URL || 'http://localhost:3001/api';
+	// Reactive environment variables
+	$: API_BASE = $envConfig.PUBLIC_API_BASE_URL;
 
 	interface Notice {
 		num: number;
@@ -25,6 +24,8 @@
 	const itemsPerPage = 20;
 
 	onMount(async () => {
+		// Load environment configuration first
+		await loadEnvironmentConfig();
 		await loadNotices();
 	});
 
