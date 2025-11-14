@@ -24,6 +24,7 @@
 
 	let webhooks: Webhook[] = [];
 	let recentNotices: Notice[] = [];
+	let stats = { webhooks: { total: 0, active: 0, inactive: 0 }, cache: { size: 0, lastUpdated: null, maxSize: 50 } };
 	let newWebhookUrl = '';
 	let newWebhookDescription = '';
 	let recaptchaToken = 'dummy_token'; // TODO: 실제 reCAPTCHA 구현
@@ -34,6 +35,7 @@
 	onMount(async () => {
 		await loadWebhooks();
 		await loadRecentNotices();
+		await loadStats();
 	});
 
 	async function loadWebhooks() {
@@ -51,6 +53,15 @@
 			recentNotices = response.data.data;
 		} catch (err) {
 			console.error('Failed to load recent notices:', err);
+		}
+	}
+
+	async function loadStats() {
+		try {
+			const response = await axios.get(`${API_BASE}/stats`);
+			stats = response.data.data;
+		} catch (err) {
+			console.error('Failed to load stats:', err);
 		}
 	}
 
@@ -108,6 +119,7 @@
 			const response = await axios.post(`${API_BASE}/check`);
 			success = response.data.message;
 			await loadRecentNotices();
+			await loadStats();
 		} catch (err) {
 			error = '수동 체크에 실패했습니다.';
 		} finally {
@@ -294,14 +306,35 @@
 			</div>
 		</div>
 
+		<!-- Stats Section -->
+		<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div class="bg-white rounded-lg shadow p-4">
+				<h3 class="text-sm font-medium text-gray-600">등록된 웹훅</h3>
+				<p class="text-2xl font-bold text-blue-600">{stats.webhooks.active}</p>
+				<p class="text-xs text-gray-500">활성 / 총 {stats.webhooks.total}개</p>
+			</div>
+			<div class="bg-white rounded-lg shadow p-4">
+				<h3 class="text-sm font-medium text-gray-600">캐시된 입법예고</h3>
+				<p class="text-2xl font-bold text-green-600">{stats.cache.size}</p>
+				<p class="text-xs text-gray-500">최대 {stats.cache.maxSize}개</p>
+			</div>
+			<div class="bg-white rounded-lg shadow p-4">
+				<h3 class="text-sm font-medium text-gray-600">마지막 업데이트</h3>
+				<p class="text-sm font-medium text-gray-900">
+					{stats.cache.lastUpdated ? formatDate(stats.cache.lastUpdated) : '없음'}
+				</p>
+			</div>
+		</div>
+
 		<!-- Info Section -->
-		<div class="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+		<div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
 			<h3 class="text-md font-medium text-blue-900 mb-2">서비스 안내</h3>
 			<ul class="text-sm text-blue-800 space-y-1">
 				<li>• 10분마다 자동으로 새로운 입법예고를 확인합니다</li>
 				<li>• 새로운 입법예고 발견 시 등록된 Discord 웹훅으로 알림을 전송합니다</li>
 				<li>• 로그인 없이 간단하게 웹훅만 등록하면 사용할 수 있습니다</li>
 				<li>• Discord 채널/서버에서 웹훅 URL을 발급받아 등록해주세요</li>
+				<li>• ✨ 개선: 메모리 캐시로 빠른 응답, 실패한 웹훅 자동 삭제, 병렬 알림 처리</li>
 			</ul>
 		</div>
 	</main>
@@ -311,6 +344,7 @@
 	.line-clamp-2 {
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}
