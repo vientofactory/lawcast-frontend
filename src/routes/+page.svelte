@@ -3,11 +3,10 @@
 	import { AlertTriangle, Bell, Plus, ExternalLink, Loader2 } from 'lucide-svelte';
 	import axios from 'axios';
 	import Header from '$lib/components/Header.svelte';
-	import { envConfig, loadEnvironmentConfig } from '$lib/stores/env';
+	import { PUBLIC_API_BASE_URL, PUBLIC_RECAPTCHA_SITE_KEY } from '$env/static/public';
 
-	// Reactive environment variables
-	$: API_BASE = $envConfig.PUBLIC_API_BASE_URL;
-	$: RECAPTCHA_SITE_KEY_VAL = $envConfig.PUBLIC_RECAPTCHA_SITE_KEY;
+	const API_BASE = PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
+	const RECAPTCHA_SITE_KEY_VAL = PUBLIC_RECAPTCHA_SITE_KEY || '';
 
 	let recaptchaLoaded = false;
 	let recaptchaWidgetId: number | null = null;
@@ -36,10 +35,6 @@
 
 	onMount(async () => {
 		try {
-			// Load environment configuration first
-			await loadEnvironmentConfig();
-			
-			// Then load app data
 			await Promise.all([loadRecentNotices(), loadStats()]);
 			loadRecaptcha();
 		} catch (err) {

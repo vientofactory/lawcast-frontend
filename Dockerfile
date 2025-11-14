@@ -9,55 +9,30 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install production dependencies
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Build stage
 FROM base AS builder
 WORKDIR /app
 
-# Build arguments for environment variables
-ARG PUBLIC_API_BASE_URL
-ARG PUBLIC_RECAPTCHA_SITE_KEY
+# Copy package files for full installation
+COPY package*.json ./
 
-# Copy node_modules from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Install all dependencies including devDependencies
+RUN npm ci
 
-# Copy source code
+# Copy source code including .env file
 COPY . .
 
-# Set environment variables for build
-ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
-ENV PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}
-
-# Debug: Print environment variables before build
-RUN echo "Build-time environment variables:" && \
-    echo "PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}" && \
-    echo "PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}" && \
-    echo "NODE_ENV=${NODE_ENV}"
-
-# Build the application with environment variables
+# Build the application (SvelteKit will automatically read .env file)
 RUN npm run build
 
-# Production stage
+# Production image
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-
-# Build arguments for runtime environment variables
-ARG PUBLIC_API_BASE_URL
-ARG PUBLIC_RECAPTCHA_SITE_KEY
-
-# Set runtime environment variables
-ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
-ENV PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}
-
-# Debug: Print runtime environment variables
-RUN echo "Runtime environment variables:" && \
-    echo "PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}" && \
-    echo "PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}" && \
-    echo "NODE_ENV=${NODE_ENV}"
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -67,9 +42,6 @@ RUN adduser --system --uid 1001 sveltekit
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
 COPY --from=deps /app/node_modules ./node_modules
-
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
 
 # Change ownership of the app directory
 RUN chown -R sveltekit:nodejs /app

@@ -7,14 +7,7 @@ const config = {
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter({
-			// Precompress static assets for better performance
-			precompress: true
-		}),
-		env: {
-			// Expose environment variables to client-side code
-			publicPrefix: 'PUBLIC_'
-		}
+		adapter: adapter()
 	}
 };
 
