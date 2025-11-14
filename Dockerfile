@@ -39,6 +39,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Build arguments for runtime environment variables
+ARG PUBLIC_VITE_API_BASE_URL
+ARG PUBLIC_RECAPTCHA_SITE_KEY
+
+# Set runtime environment variables
+ENV PUBLIC_VITE_API_BASE_URL=${PUBLIC_VITE_API_BASE_URL}
+ENV PUBLIC_RECAPTCHA_SITE_KEY=${PUBLIC_RECAPTCHA_SITE_KEY}
+
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 sveltekit
