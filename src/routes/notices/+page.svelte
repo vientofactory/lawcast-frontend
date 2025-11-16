@@ -132,7 +132,7 @@
 											class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700"
 										>
 											<Users class="mr-1 h-3 w-3" />
-											의견 {notice.numComments}개
+											의견 {notice.numComments.toLocaleString()}개
 										</span>
 									{/if}
 								</div>
