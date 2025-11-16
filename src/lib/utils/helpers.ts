@@ -101,3 +101,41 @@ export function openExternalLink(url: string): void {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	}
 }
+
+/**
+ * 파일 다운로드 링크 열기
+ */
+export function downloadFile(url: string, filename?: string): void {
+	if (!url || url.trim() === '' || typeof window === 'undefined') {
+		return;
+	}
+
+	try {
+		// 새 창에서 다운로드 링크 열기
+		const link = document.createElement('a');
+		link.href = url;
+		link.target = '_blank';
+		link.rel = 'noopener noreferrer';
+
+		if (filename) {
+			link.download = filename;
+		}
+
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	} catch (error) {
+		console.error('파일 다운로드 실패:', error);
+		// 실패 시 새 창에서 URL 열기
+		openExternalLink(url);
+	}
+}
+
+/**
+ * 파일 다운로드 가능 여부 확인
+ */
+export function isDownloadable(url: string): boolean {
+	return (
+		Boolean(url) && url.trim() !== '' && (url.startsWith('http://') || url.startsWith('https://'))
+	);
+}

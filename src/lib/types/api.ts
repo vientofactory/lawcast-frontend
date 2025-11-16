@@ -5,6 +5,10 @@ export interface Notice {
 	committee: string;
 	numComments: number;
 	link: string;
+	attachments: {
+		pdfFile: string;
+		hwpFile: string;
+	};
 }
 
 export interface WebhookStats {

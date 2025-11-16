@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Bell, ExternalLink, Plus } from 'lucide-svelte';
+	import { Bell, ExternalLink, Plus, FileText, FileDown } from 'lucide-svelte';
 	import type { Notice } from '$lib/types/api';
-	import { openExternalLink } from '$lib/utils/helpers';
+	import { openExternalLink, downloadFile, isDownloadable } from '$lib/utils/helpers';
 
 	export let notices: Notice[] = [];
 </script>
@@ -47,20 +47,49 @@
 						>
 							{notice.subject}
 						</h3>
-						<button
-							on:click={() => openExternalLink(notice.link)}
-							class="ml-3 shrink-0 rounded-lg bg-blue-100/80 p-2 text-blue-600 transition-all duration-200 hover:scale-105 hover:bg-blue-200 hover:text-blue-700"
-							title="자세히 보기"
-						>
-							<ExternalLink class="h-4 w-4" />
-						</button>
+						<div class="ml-3 flex shrink-0 items-center gap-1">
+							<!-- 파일 다운로드 버튼들 -->
+							{#if notice.attachments && (isDownloadable(notice.attachments.pdfFile) || isDownloadable(notice.attachments.hwpFile))}
+								<div class="flex gap-1">
+									{#if isDownloadable(notice.attachments.pdfFile)}
+										<button
+											on:click={() =>
+												downloadFile(notice.attachments.pdfFile, `${notice.num}.pdf`)}
+											class="rounded-md bg-red-50/90 p-1.5 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
+											title="PDF 다운로드"
+										>
+											<FileText class="h-3.5 w-3.5" />
+										</button>
+									{/if}
+									{#if isDownloadable(notice.attachments.hwpFile)}
+										<button
+											on:click={() =>
+												downloadFile(notice.attachments.hwpFile, `${notice.num}.hwp`)}
+											class="rounded-md bg-blue-50/90 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
+											title="HWP 다운로드"
+										>
+											<FileDown class="h-3.5 w-3.5" />
+										</button>
+									{/if}
+								</div>
+								<div class="h-4 w-px bg-gray-200"></div>
+							{/if}
+							<!-- 상세보기 버튼 -->
+							<button
+								on:click={() => openExternalLink(notice.link)}
+								class="rounded-md bg-gray-50/90 p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
+								title="자세히 보기"
+							>
+								<ExternalLink class="h-3.5 w-3.5" />
+							</button>
+						</div>
 					</div>
 					<div class="flex items-center justify-between text-xs text-gray-500">
 						<span>{notice.proposerCategory} | {notice.committee}</span>
 						<span>의견 {notice.numComments.toLocaleString()}개</span>
 					</div>
 					<div class="mt-1 text-xs text-gray-400">
-						의안번호: {notice.num}
+						<span>의안번호: {notice.num}</span>
 					</div>
 				</div>
 			{/each}

@@ -1,11 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Bell, ExternalLink, Loader2, ArrowLeft, Calendar, Users } from 'lucide-svelte';
+	import {
+		Bell,
+		ExternalLink,
+		Loader2,
+		ArrowLeft,
+		Calendar,
+		Users,
+		FileText,
+		FileDown
+	} from 'lucide-svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Alert from '$lib/components/Alert.svelte';
 	import { apiClient } from '$lib/api/client';
 	import type { Notice } from '$lib/types/api';
-	import { openExternalLink } from '$lib/utils/helpers';
+	import { openExternalLink, downloadFile, isDownloadable } from '$lib/utils/helpers';
 
 	let notices: Notice[] = [];
 	let isLoading = true;
@@ -121,7 +130,7 @@
 					<div class="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md">
 						<div class="flex items-start justify-between">
 							<div class="min-w-0 flex-1">
-								<div class="mb-3 flex items-center space-x-2">
+								<div class="mb-3 flex flex-wrap items-center gap-2">
 									<span
 										class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
 									>
@@ -153,13 +162,42 @@
 								</div>
 							</div>
 
-							<button
-								on:click={() => openExternalLink(notice.link)}
-								class="ml-4 shrink-0 rounded-md bg-blue-50 p-3 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
-								title="자세히 보기"
-							>
-								<ExternalLink class="h-5 w-5" />
-							</button>
+							<div class="ml-4 flex shrink-0 items-center gap-2">
+								<!-- 파일 다운로드 버튼들 -->
+								{#if notice.attachments && (isDownloadable(notice.attachments.pdfFile) || isDownloadable(notice.attachments.hwpFile))}
+									<div class="flex gap-1">
+										{#if isDownloadable(notice.attachments.pdfFile)}
+											<button
+												on:click={() =>
+													downloadFile(notice.attachments.pdfFile, `${notice.num}.pdf`)}
+												class="rounded-md bg-red-50 p-2.5 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
+												title="PDF 다운로드"
+											>
+												<FileText class="h-5 w-5" />
+											</button>
+										{/if}
+										{#if isDownloadable(notice.attachments.hwpFile)}
+											<button
+												on:click={() =>
+													downloadFile(notice.attachments.hwpFile, `${notice.num}.hwp`)}
+												class="rounded-md bg-blue-50 p-2.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
+												title="HWP 다운로드"
+											>
+												<FileDown class="h-5 w-5" />
+											</button>
+										{/if}
+									</div>
+									<div class="h-6 w-px bg-gray-200"></div>
+								{/if}
+								<!-- 상세보기 버튼 -->
+								<button
+									on:click={() => openExternalLink(notice.link)}
+									class="rounded-md bg-gray-50 p-2.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
+									title="자세히 보기"
+								>
+									<ExternalLink class="h-5 w-5" />
+								</button>
+							</div>
 						</div>
 					</div>
 				{/each}
@@ -185,7 +223,7 @@
 							on:click={() => goToPage(page)}
 							class={`rounded-xl px-4 py-3 text-sm font-bold shadow-sm transition-all duration-200 hover:shadow-md ${
 								currentPage === page
-									? 'scale-105 bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200/50'
+									? 'scale-105 bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200/50'
 									: 'border-2 border-gray-200 bg-white/80 text-gray-600 backdrop-blur-sm hover:border-blue-200 hover:bg-white hover:text-blue-600'
 							}`}
 						>
@@ -203,7 +241,7 @@
 
 				<div class="mt-6 text-center">
 					<span
-						class="inline-flex items-center rounded-full bg-gradient-to-r from-gray-100 to-blue-100 px-4 py-2 text-sm font-semibold text-gray-700"
+						class="inline-flex items-center rounded-full bg-linear-to-r from-gray-100 to-blue-100 px-4 py-2 text-sm font-semibold text-gray-700"
 					>
 						{(currentPage - 1) * itemsPerPage + 1}-{Math.min(
 							currentPage * itemsPerPage,
