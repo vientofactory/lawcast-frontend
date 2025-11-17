@@ -20,7 +20,7 @@
 	let isLoading = true;
 	let error = '';
 	let currentPage = 1;
-	const itemsPerPage = 20;
+	const itemsPerPage = 10;
 
 	onMount(async () => {
 		await loadNotices();
