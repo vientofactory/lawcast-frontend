@@ -22,7 +22,7 @@ export interface CacheInfo {
 	size: number;
 	lastUpdated: string | null;
 	maxSize: number;
-	isInitialized?: boolean;
+	isInitialized: boolean;
 }
 
 export interface SystemStats {
