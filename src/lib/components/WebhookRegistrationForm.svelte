@@ -194,7 +194,7 @@
 		<button
 			type="submit"
 			disabled={isSubmitting || isInitialLoading}
-			class="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-200/50 transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300/60 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+			class="flex w-full cursor-pointer items-center justify-center rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-200/50 transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300/60 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 		>
 			{#if isSubmitting}
 				<FontAwesomeIcon icon={faSpinner} class="mr-2 h-4 w-4 animate-spin" />

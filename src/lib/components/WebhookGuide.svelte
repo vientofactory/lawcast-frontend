@@ -10,7 +10,7 @@
 	<button
 		type="button"
 		on:click={() => (isExpanded = !isExpanded)}
-		class="group flex w-full items-center justify-between rounded-lg bg-gray-50/80 px-4 py-3 text-left transition-all duration-300 hover:bg-gray-100/80 hover:shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 focus:outline-none"
+		class="group flex w-full cursor-pointer items-center justify-between rounded-lg bg-gray-50/80 px-4 py-3 text-left transition-all duration-300 hover:bg-gray-100/80 hover:shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 focus:outline-none"
 	>
 		<div class="flex items-center">
 			<div

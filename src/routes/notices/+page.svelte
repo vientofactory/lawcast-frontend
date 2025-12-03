@@ -174,7 +174,7 @@
 											<button
 												on:click={() =>
 													downloadFile(notice.attachments.pdfFile, `${notice.num}.pdf`)}
-												class="rounded-md bg-red-50 p-2.5 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
+												class="cursor-pointer rounded-md bg-red-50 p-2.5 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
 												title="PDF 다운로드"
 											>
 												<FontAwesomeIcon icon={faFileText} class="h-5 w-5" />
@@ -184,7 +184,7 @@
 											<button
 												on:click={() =>
 													downloadFile(notice.attachments.hwpFile, `${notice.num}.hwp`)}
-												class="rounded-md bg-blue-50 p-2.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
+												class="cursor-pointer rounded-md bg-blue-50 p-2.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
 												title="HWP 다운로드"
 											>
 												<FontAwesomeIcon icon={faFileDownload} class="h-5 w-5" />
@@ -196,7 +196,7 @@
 								<!-- 상세보기 버튼 -->
 								<button
 									on:click={() => openExternalLink(notice.link)}
-									class="rounded-md bg-gray-50 p-2.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
+									class="cursor-pointer rounded-md bg-gray-50 p-2.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
 									title="자세히 보기"
 								>
 									<FontAwesomeIcon icon={faExternalLink} class="h-5 w-5" />
