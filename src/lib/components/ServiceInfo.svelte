@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Bell, Github } from 'lucide-svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faBell } from '@fortawesome/free-solid-svg-icons';
+	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 </script>
 
 <div
@@ -7,7 +9,7 @@
 >
 	<h3 class="mb-4 flex items-center text-lg font-bold text-blue-900">
 		<div class="mr-2 rounded-lg bg-blue-200/50 p-1.5">
-			<Bell class="h-4 w-4 text-blue-700" />
+			<FontAwesomeIcon icon={faBell} class="h-4 w-4 text-blue-700" />
 		</div>
 		서비스 안내
 	</h3>
@@ -30,9 +32,9 @@
 				href="https://github.com/vientofactory/lawcast"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="flex items-center space-x-2 text-blue-800 hover:text-blue-600 transition-colors"
+				class="flex items-center space-x-2 text-blue-800 transition-colors hover:text-blue-600"
 			>
-				<Github class="h-4 w-4" />
+				<FontAwesomeIcon icon={faGithub} class="h-4 w-4" />
 				<span>오픈소스 프로젝트</span>
 			</a>
 		</li>

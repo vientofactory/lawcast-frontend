@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { ChevronRight, HelpCircle } from 'lucide-svelte';
-
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faChevronRight, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 	let isExpanded = false;
 </script>
 
@@ -16,7 +16,8 @@
 			<div
 				class="mr-2 rounded-md bg-blue-100 p-1 transition-colors duration-200 group-hover:bg-blue-200"
 			>
-				<HelpCircle
+				<FontAwesomeIcon
+					icon={faCircleInfo}
 					class="h-4 w-4 text-blue-600 transition-colors duration-200 group-hover:text-blue-700"
 				/>
 			</div>
@@ -27,7 +28,8 @@
 			</span>
 		</div>
 		<div class="transition-transform duration-300 ease-out {isExpanded ? 'rotate-90' : 'rotate-0'}">
-			<ChevronRight
+			<FontAwesomeIcon
+				icon={faChevronRight}
 				class="h-4 w-4 text-gray-500 transition-colors duration-200 group-hover:text-gray-600"
 			/>
 		</div>

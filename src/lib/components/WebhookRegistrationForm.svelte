@@ -1,22 +1,26 @@
 <script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte';
-	import { Plus, Loader2 } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import { PUBLIC_RECAPTCHA_SITE_KEY } from '$env/static/public';
 	import { apiClient } from '$lib/api/client';
 	import { validateDiscordWebhookUrl, normalizeWebhookUrl } from '$lib/utils/helpers';
 	import WebhookGuide from './WebhookGuide.svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 	const RECAPTCHA_SITE_KEY_VAL = PUBLIC_RECAPTCHA_SITE_KEY || '';
-	const dispatch = createEventDispatcher();
+
+	// Props
+	export let isInitialLoading = false;
+	export let onSuccess: (message: string) => void = () => {};
+	export let onError: (message: string) => void = () => {};
+	export let onClearMessage: () => void = () => {};
+	export let onWebhookRegistered: () => void = () => {};
 
 	let recaptchaLoaded = false;
 	let recaptchaWidgetId: number | null = null;
 	let newWebhookUrl = '';
 	let recaptchaToken = '';
 	let isSubmitting = false;
-
-	export let isInitialLoading = false;
-
 	onMount(() => {
 		loadRecaptcha();
 		// reCAPTCHA 로드가 늦을 경우를 대비해 지연 렌더링 시도
@@ -68,7 +72,7 @@
 						recaptchaToken = '';
 					},
 					'error-callback': () => {
-						dispatch('error', 'reCAPTCHA 인증에 실패했습니다. 다시 시도해주세요.');
+						onError('reCAPTCHA 인증에 실패했습니다. 다시 시도해주세요.');
 						recaptchaToken = '';
 					}
 				});
@@ -93,13 +97,13 @@
 		// 웹훅 URL 유효성 검증
 		const validation = validateDiscordWebhookUrl(newWebhookUrl);
 		if (!validation.isValid) {
-			dispatch('error', validation.message || '올바르지 않은 웹훅 URL입니다.');
+			onError(validation.message || '올바르지 않은 웹훅 URL입니다.');
 			return;
 		}
 
 		// reCAPTCHA 검증
 		if (!recaptchaToken || recaptchaToken.trim().length === 0) {
-			dispatch('error', 'reCAPTCHA 인증을 완료해주세요.');
+			onError('reCAPTCHA 인증을 완료해주세요.');
 			return;
 		}
 
@@ -109,7 +113,7 @@
 		}
 
 		isSubmitting = true;
-		dispatch('clearMessage');
+		onClearMessage();
 
 		try {
 			// URL 정규화
@@ -121,21 +125,21 @@
 			});
 
 			if (result.success) {
-				dispatch('success', result.message || '웹훅이 성공적으로 등록되었습니다.');
+				onSuccess(result.message || '웹훅이 성공적으로 등록되었습니다.');
 				newWebhookUrl = '';
 				resetRecaptcha();
-				dispatch('webhookRegistered'); // 통계 업데이트를 위한 이벤트
+				onWebhookRegistered(); // 통계 업데이트를 위한 이벤트
 			} else {
-				dispatch('error', result.message || '웹훅 등록에 실패했습니다.');
+				onError(result.message || '웹훅 등록에 실패했습니다.');
 				resetRecaptcha();
 			}
 		} catch (err: unknown) {
 			resetRecaptcha();
 
 			if (err instanceof Error) {
-				dispatch('error', err.message);
+				onError(err.message);
 			} else {
-				dispatch('error', '예상치 못한 오류가 발생했습니다.');
+				onError('예상치 못한 오류가 발생했습니다.');
 			}
 		} finally {
 			isSubmitting = false;
@@ -148,7 +152,7 @@
 >
 	<h2 class="mb-6 flex items-center text-xl font-bold tracking-tight text-gray-800">
 		<div class="mr-3 rounded-lg bg-linear-to-r from-blue-500 to-indigo-500 p-2">
-			<Plus class="h-5 w-5 text-white" />
+			<FontAwesomeIcon icon={faPlus} class="h-5 w-5 text-white" />
 		</div>
 		웹훅 등록
 	</h2>
@@ -181,7 +185,7 @@
 			<div id="recaptcha-container" class="mb-4"></div>
 			{#if !recaptchaLoaded}
 				<div class="mb-2 text-sm text-gray-500">
-					<Loader2 class="mr-1 inline h-4 w-4 animate-spin" />
+					<FontAwesomeIcon icon={faSpinner} class="mr-1 inline h-4 w-4 animate-spin" />
 					reCAPTCHA 로딩 중...
 				</div>
 			{/if}
@@ -193,10 +197,10 @@
 			class="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-200/50 transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300/60 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 		>
 			{#if isSubmitting}
-				<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+				<FontAwesomeIcon icon={faSpinner} class="mr-2 h-4 w-4 animate-spin" />
 				등록 중...
 			{:else}
-				<Plus class="mr-2 h-4 w-4" />
+				<FontAwesomeIcon icon={faPlus} class="mr-2 h-4 w-4" />
 				웹훅 등록
 			{/if}
 		</button>

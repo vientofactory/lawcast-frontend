@@ -1,20 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		Bell,
-		ExternalLink,
-		Loader2,
-		ArrowLeft,
-		Calendar,
-		Users,
-		FileText,
-		FileDown
-	} from 'lucide-svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Alert from '$lib/components/Alert.svelte';
 	import { apiClient } from '$lib/api/client';
 	import type { Notice } from '$lib/types/api';
 	import { openExternalLink, downloadFile, isDownloadable } from '$lib/utils/helpers';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import {
+		faArrowLeft,
+		faBell,
+		faCalendar,
+		faExternalLink,
+		faFileDownload,
+		faFileText,
+		faSpinner,
+		faUser
+	} from '@fortawesome/free-solid-svg-icons';
 
 	let notices: Notice[] = [];
 	let isLoading = true;
@@ -59,7 +60,7 @@
 	<meta name="description" content="국회 입법예고 전체 목록을 확인하세요." />
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+<div class="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
 	<Header />
 
 	<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -69,7 +70,7 @@
 				href="../"
 				class="flex items-center rounded-lg border border-gray-200/50 bg-white/60 px-3 py-2 text-gray-600 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/80 hover:text-gray-800"
 			>
-				<ArrowLeft class="mr-2 h-4 w-4" />
+				<FontAwesomeIcon icon={faArrowLeft} class="mr-2 h-4 w-4" />
 				메인으로
 			</a>
 			<span class="text-gray-400">/</span>
@@ -79,8 +80,8 @@
 		<!-- Header -->
 		<div class="mb-8 rounded-2xl border border-white/50 bg-white/70 p-8 shadow-lg backdrop-blur-sm">
 			<div class="mb-4 flex items-center">
-				<div class="mr-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 p-3">
-					<Bell class="h-8 w-8 text-white" />
+				<div class="mr-4 rounded-xl bg-linear-to-r from-blue-500 to-indigo-500 p-3">
+					<FontAwesomeIcon icon={faBell} class="h-8 w-8 text-white" />
 				</div>
 				<div>
 					<h1 class="text-4xl font-bold tracking-tight text-gray-800">전체 입법예고</h1>
@@ -100,7 +101,10 @@
 		{#if isLoading}
 			<div class="flex items-center justify-center py-16">
 				<div class="text-center">
-					<Loader2 class="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+					<FontAwesomeIcon
+						icon={faSpinner}
+						class="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600"
+					/>
 					<p class="text-gray-600">입법예고 데이터를 불러오는 중...</p>
 				</div>
 			</div>
@@ -113,10 +117,10 @@
 			/>
 		{:else if notices.length === 0}
 			<div
-				class="rounded-2xl border border-gray-200/50 bg-gradient-to-br from-gray-50 to-blue-50/30 p-16 text-center shadow-xl backdrop-blur-sm"
+				class="rounded-2xl border border-gray-200/50 bg-linear-to-br from-gray-50 to-blue-50/30 p-16 text-center shadow-xl backdrop-blur-sm"
 			>
-				<div class="mb-6 inline-block rounded-full bg-gradient-to-r from-gray-200 to-blue-200 p-6">
-					<Bell class="h-16 w-16 text-gray-400" />
+				<div class="mb-6 inline-block rounded-full bg-linear-to-r from-gray-200 to-blue-200 p-6">
+					<FontAwesomeIcon icon={faBell} class="h-16 w-16 text-gray-400" />
 				</div>
 				<h3 class="mb-3 text-2xl font-bold text-gray-800">입법예고가 없습니다</h3>
 				<p class="mx-auto max-w-md text-lg leading-relaxed text-gray-600">
@@ -140,7 +144,7 @@
 										<span
 											class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700"
 										>
-											<Users class="mr-1 h-3 w-3" />
+											<FontAwesomeIcon icon={faUser} class="mr-1 h-3 w-3" />
 											의견 {notice.numComments.toLocaleString()}개
 										</span>
 									{/if}
@@ -152,11 +156,11 @@
 
 								<div class="flex flex-wrap gap-4 text-sm text-gray-600">
 									<div class="flex items-center">
-										<Calendar class="mr-1 h-4 w-4" />
+										<FontAwesomeIcon icon={faCalendar} class="mr-1 h-4 w-4" />
 										제안자 구분: {notice.proposerCategory}
 									</div>
 									<div class="flex items-center">
-										<Bell class="mr-1 h-4 w-4" />
+										<FontAwesomeIcon icon={faBell} class="mr-1 h-4 w-4" />
 										소관위원회: {notice.committee}
 									</div>
 								</div>
@@ -173,7 +177,7 @@
 												class="rounded-md bg-red-50 p-2.5 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
 												title="PDF 다운로드"
 											>
-												<FileText class="h-5 w-5" />
+												<FontAwesomeIcon icon={faFileText} class="h-5 w-5" />
 											</button>
 										{/if}
 										{#if isDownloadable(notice.attachments.hwpFile)}
@@ -183,7 +187,7 @@
 												class="rounded-md bg-blue-50 p-2.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
 												title="HWP 다운로드"
 											>
-												<FileDown class="h-5 w-5" />
+												<FontAwesomeIcon icon={faFileDownload} class="h-5 w-5" />
 											</button>
 										{/if}
 									</div>
@@ -195,7 +199,7 @@
 									class="rounded-md bg-gray-50 p-2.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
 									title="자세히 보기"
 								>
-									<ExternalLink class="h-5 w-5" />
+									<FontAwesomeIcon icon={faExternalLink} class="h-5 w-5" />
 								</button>
 							</div>
 						</div>

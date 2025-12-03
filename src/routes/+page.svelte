@@ -54,12 +54,12 @@
 		success = '';
 	}
 
-	function handleWebhookError(event: CustomEvent<string>) {
-		error = event.detail;
+	function handleWebhookError(message: string) {
+		error = message;
 	}
 
-	function handleWebhookSuccess(event: CustomEvent<string>) {
-		success = event.detail;
+	function handleWebhookSuccess(message: string) {
+		success = message;
 	}
 
 	async function handleWebhookRegistered() {
@@ -112,10 +112,10 @@
 				<!-- Webhook Registration -->
 				<WebhookRegistrationForm
 					{isInitialLoading}
-					on:error={handleWebhookError}
-					on:success={handleWebhookSuccess}
-					on:clearMessage={clearMessage}
-					on:webhookRegistered={handleWebhookRegistered}
+					onError={handleWebhookError}
+					onSuccess={handleWebhookSuccess}
+					onClearMessage={clearMessage}
+					onWebhookRegistered={handleWebhookRegistered}
 				/>
 
 				<!-- Recent Notices -->

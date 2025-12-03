@@ -37,8 +37,13 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
+		"@fontsource/pretendard": "^5.2.5",
+		"@fortawesome/fontawesome-free": "^7.1.0",
+		"@fortawesome/fontawesome-svg-core": "^7.1.0",
+		"@fortawesome/free-brands-svg-icons": "^7.1.0",
+		"@fortawesome/free-solid-svg-icons": "^7.1.0",
+		"@fortawesome/svelte-fontawesome": "^0.2.4",
 		"axios": "^1.13.2",
-		"lucide-svelte": "^0.553.0",
 		"svelte-recaptcha": "^0.0.0"
 	}
 }

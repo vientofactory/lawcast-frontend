@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Loader2 } from 'lucide-svelte';
+	import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	export let message: string = '데이터를 불러오는 중...';
 	export let size: 'sm' | 'md' | 'lg' = 'md';
@@ -13,7 +14,10 @@
 
 <div class="flex items-center justify-center py-16">
 	<div class="text-center">
-		<Loader2 class="mx-auto mb-4 {sizeClasses[size]} animate-spin text-blue-600" />
+		<FontAwesomeIcon
+			icon={faSpinner}
+			class="mx-auto mb-4 {sizeClasses[size]} animate-spin text-blue-600"
+		/>
 		<p class="text-gray-600">{message}</p>
 	</div>
 </div>

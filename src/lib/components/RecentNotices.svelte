@@ -1,7 +1,14 @@
 <script lang="ts">
-	import { Bell, ExternalLink, Plus, FileText, FileDown } from 'lucide-svelte';
 	import type { Notice } from '$lib/types/api';
 	import { openExternalLink, downloadFile, isDownloadable } from '$lib/utils/helpers';
+	import {
+		faBell,
+		faExternalLink,
+		faFileDownload,
+		faFileText,
+		faPlus
+	} from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	export let notices: Notice[] = [];
 </script>
@@ -12,7 +19,7 @@
 	<div class="mb-6 flex items-center justify-between">
 		<h2 class="flex items-center text-xl font-bold tracking-tight text-gray-800">
 			<div class="mr-3 rounded-lg bg-linear-to-r from-green-500 to-emerald-500 p-2">
-				<Bell class="h-5 w-5 text-white" />
+				<FontAwesomeIcon icon={faBell} class="h-5 w-5 text-white" />
 			</div>
 			최근 입법예고 ({notices.length})
 		</h2>
@@ -22,7 +29,7 @@
 				class="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
 			>
 				전체 보기
-				<ExternalLink class="ml-1 h-4 w-4" />
+				<FontAwesomeIcon icon={faExternalLink} class="ml-1 h-4 w-4" />
 			</a>
 		{/if}
 	</div>
@@ -30,7 +37,7 @@
 	{#if notices.length === 0}
 		<div class="py-8 text-center">
 			<div class="mb-2 text-gray-400">
-				<Bell class="mx-auto h-8 w-8" />
+				<FontAwesomeIcon icon={faBell} class="mx-auto h-8 w-8" />
 			</div>
 			<p class="text-gray-500">아직 수집된 입법예고가 없습니다.</p>
 			<p class="mt-1 text-sm text-gray-400">서버가 시작되면 자동으로 데이터를 수집합니다.</p>
@@ -53,22 +60,20 @@
 								<div class="flex gap-1">
 									{#if isDownloadable(notice.attachments.pdfFile)}
 										<button
-											on:click={() =>
-												downloadFile(notice.attachments.pdfFile, `${notice.num}.pdf`)}
+											on:click={() => downloadFile(notice.attachments.pdfFile, `${notice.num}.pdf`)}
 											class="rounded-md bg-red-50/90 p-1.5 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
 											title="PDF 다운로드"
 										>
-											<FileText class="h-3.5 w-3.5" />
+											<FontAwesomeIcon icon={faFileText} class="h-3.5 w-3.5" />
 										</button>
 									{/if}
 									{#if isDownloadable(notice.attachments.hwpFile)}
 										<button
-											on:click={() =>
-												downloadFile(notice.attachments.hwpFile, `${notice.num}.hwp`)}
+											on:click={() => downloadFile(notice.attachments.hwpFile, `${notice.num}.hwp`)}
 											class="rounded-md bg-blue-50/90 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
 											title="HWP 다운로드"
 										>
-											<FileDown class="h-3.5 w-3.5" />
+											<FontAwesomeIcon icon={faFileDownload} class="h-3.5 w-3.5" />
 										</button>
 									{/if}
 								</div>
@@ -80,7 +85,7 @@
 								class="rounded-md bg-gray-50/90 p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700"
 								title="자세히 보기"
 							>
-								<ExternalLink class="h-3.5 w-3.5" />
+								<FontAwesomeIcon icon={faExternalLink} class="h-3.5 w-3.5" />
 							</button>
 						</div>
 					</div>
@@ -101,7 +106,7 @@
 					href="./notices"
 					class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
 				>
-					<Plus class="mr-1 h-4 w-4" />
+					<FontAwesomeIcon icon={faPlus} class="mr-1 h-4 w-4" />
 					{notices.length - 5}개 더 보기
 				</a>
 			</div>

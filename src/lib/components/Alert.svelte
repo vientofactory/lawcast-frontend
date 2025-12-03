@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { AlertTriangle, CheckCircle, Info, X, RefreshCw } from 'lucide-svelte';
+	import {
+		faCircleCheck,
+		faInfo,
+		faRefresh,
+		faTriangleExclamation,
+		faX
+	} from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	export let type: 'error' | 'success' | 'warning' | 'info' = 'info';
@@ -18,7 +25,7 @@
 
 	const typeConfig = {
 		error: {
-			icon: AlertTriangle,
+			icon: faTriangleExclamation,
 			containerClass: 'border-red-200/60 bg-gradient-to-r from-red-50 to-rose-50',
 			iconClass: 'text-red-500',
 			textClass: 'text-red-700',
@@ -26,7 +33,7 @@
 			customButtonClass: 'bg-red-100 hover:bg-red-200 text-red-700'
 		},
 		success: {
-			icon: CheckCircle,
+			icon: faCircleCheck,
 			containerClass: 'border-green-200/60 bg-gradient-to-r from-green-50 to-emerald-50',
 			iconClass: 'text-green-500',
 			textClass: 'text-green-700',
@@ -34,7 +41,7 @@
 			customButtonClass: 'bg-green-100 hover:bg-green-200 text-green-700'
 		},
 		warning: {
-			icon: AlertTriangle,
+			icon: faTriangleExclamation,
 			containerClass: 'border-yellow-200/60 bg-gradient-to-r from-yellow-50 to-amber-50',
 			iconClass: 'text-yellow-500',
 			textClass: 'text-yellow-700',
@@ -42,7 +49,7 @@
 			customButtonClass: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700'
 		},
 		info: {
-			icon: Info,
+			icon: faInfo,
 			containerClass: 'border-blue-200/60 bg-gradient-to-r from-blue-50 to-indigo-50',
 			iconClass: 'text-blue-500',
 			textClass: 'text-blue-700',
@@ -52,7 +59,6 @@
 	};
 
 	$: config = typeConfig[type];
-	$: IconComponent = config.icon;
 
 	// Setup auto hide functionality on mount
 	onMount(() => {
@@ -108,7 +114,7 @@
 	>
 		<div class="flex items-center justify-between">
 			<div class="flex items-center">
-				<IconComponent class="mr-3 h-5 w-5 {config.iconClass} shrink-0" />
+				<FontAwesomeIcon icon={config.icon} class="mr-3 h-5 w-5 {config.iconClass} shrink-0" />
 				<span class="{config.textClass} leading-relaxed font-medium">{message}</span>
 			</div>
 
@@ -119,7 +125,7 @@
 						class="flex items-center space-x-1 text-sm {config.buttonClass} underline transition-all duration-200 hover:scale-105"
 						title="페이지 새로고침"
 					>
-						<RefreshCw class="h-3 w-3" />
+						<FontAwesomeIcon icon={faRefresh} class="h-3 w-3" />
 						<span>새로고침</span>
 					</button>
 				{/if}
@@ -140,7 +146,7 @@
 						aria-label="알림 닫기"
 						title="닫기"
 					>
-						<X class="h-4 w-4" />
+						<FontAwesomeIcon icon={faX} class="h-4 w-4" />
 					</button>
 				{/if}
 			</div>
