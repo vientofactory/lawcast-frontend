@@ -7,7 +7,7 @@
 		faX
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	export let type: 'error' | 'success' | 'warning' | 'info' = 'info';
 	export let message: string;
@@ -18,8 +18,6 @@
 	export let customAction: { label: string; handler: () => void } | undefined = undefined;
 	export let autoHide: boolean = false;
 	export let autoHideDelay: number = 5000;
-
-	const dispatch = createEventDispatcher();
 	let visible = true;
 	let autoHideTimer: NodeJS.Timeout | undefined;
 
@@ -86,18 +84,15 @@
 		visible = false;
 		setTimeout(() => {
 			onDismiss?.();
-			dispatch('dismiss');
 		}, 200); // Wait for animation to complete
 	}
 
 	function handleRefresh() {
 		onRefresh?.();
-		dispatch('refresh');
 	}
 
 	function handleCustomAction() {
 		customAction?.handler();
-		dispatch('customAction');
 	}
 </script>
 
