@@ -8,14 +8,14 @@ LawCast 서비스의 웹 프론트엔드 애플리케이션입니다. SvelteKit 
 - **최근 공지 조회**: 입법예고 변동사항 실시간 확인
 - **시스템 통계**: 웹훅 및 캐시 상태 모니터링
 - **반응형 디자인**: 모바일 친화적인 UI
-- **reCAPTCHA 통합**: 봇 방지 검증
+- **reCAPTCHA v2 통합**: 봇 방지 기능 제공
 
 ## 기술 스택
 
 - **프레임워크**: SvelteKit
 - **언어**: TypeScript
 - **스타일링**: Tailwind CSS
-- **아이콘**: Lucide Svelte
+- **아이콘**: FontAwesome
 - **HTTP 클라이언트**: Axios
 - **빌드 도구**: Vite
 
@@ -63,7 +63,7 @@ src/
 │   └── utils/         # 유틸리티 함수
 ├── routes/            # 페이지 라우트
 │   ├── +page.svelte   # 메인 페이지
-│   └── notices/       # 공지 페이지
+│   └── notices/       # 전체 입법예고 페이지
 └── app.html           # HTML 템플릿
 ```
 
