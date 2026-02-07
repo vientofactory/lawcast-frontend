@@ -73,7 +73,7 @@ src/
 
 ```env
 # API 베이스 URL
-VITE_API_BASE_URL=http://localhost:3000
+API_BASE_URL=http://localhost:3000
 PUBLIC_RECAPTCHA_SITE_KEY=your-recaptcha-site-key
 ```
 
