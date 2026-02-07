@@ -80,3 +80,21 @@ body {
 ::-webkit-scrollbar-thumb:hover {
 	background: linear-gradient(135deg, #2563eb, #4f46e5);
 }
+
+/* NProgress 커스텀 스타일 */
+#nprogress .bar {
+	background: linear-gradient(to right, #3b82f6, #6366f1) !important; /* blue-500 to indigo-500 */
+	height: 4px !important;
+	z-index: 99999 !important;
+}
+
+#nprogress .peg {
+	box-shadow:
+		0 0 10px #6366f1,
+		0 0 5px #3b82f6 !important;
+}
+
+#nprogress .spinner-icon {
+	border-top-color: #6366f1 !important;
+	border-left-color: #6366f1 !important;
+}

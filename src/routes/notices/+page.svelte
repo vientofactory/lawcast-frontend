@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Alert from '$lib/components/Alert.svelte';
-	import { apiClient } from '$lib/api/client';
-	import type { Notice } from '$lib/types/api';
 	import { openExternalLink, downloadFile, isDownloadable } from '$lib/utils/helpers';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -16,28 +13,30 @@
 		faSpinner,
 		faUser
 	} from '@fortawesome/free-solid-svg-icons';
+	import { invalidateAll } from '$app/navigation';
+	import type { PageData } from './$types';
 
-	let notices: Notice[] = [];
-	let isLoading = true;
+	export let data: PageData;
+
+	$: notices = data.notices || [];
+
 	let error = '';
+	$: if (data) {
+		error = data.error || '';
+	}
+
+	let isLoading = false;
 	let currentPage = 1;
 	const itemsPerPage = 10;
-
-	onMount(async () => {
-		await loadNotices();
-	});
 
 	async function loadNotices() {
 		try {
 			isLoading = true;
-			notices = await apiClient.getRecentNotices();
+			await invalidateAll();
 		} catch (err) {
 			console.error('Failed to load notices:', err);
-			if (err instanceof Error) {
-				error = err.message;
-			} else {
-				error = '입법예고 데이터를 불러오는데 실패했습니다.';
-			}
+			// invalidateAll 실패 시 에러 처리
+			error = '데이터를 새로고침하는데 실패했습니다.';
 		} finally {
 			isLoading = false;
 		}
@@ -52,6 +51,12 @@
 			currentPage = page;
 			window.scrollTo({ top: 0, behavior: 'smooth' });
 		}
+	}
+
+	function getPaginationInfo() {
+		const start = (currentPage - 1) * itemsPerPage + 1;
+		const end = Math.min(currentPage * itemsPerPage, notices.length);
+		return `${start}-${end} / ${notices.length}개`;
 	}
 </script>
 
@@ -247,10 +252,7 @@
 					<span
 						class="inline-flex items-center rounded-full bg-linear-to-r from-gray-100 to-blue-100 px-4 py-2 text-sm font-semibold text-gray-700"
 					>
-						{(currentPage - 1) * itemsPerPage + 1}-{Math.min(
-							currentPage * itemsPerPage,
-							notices.length
-						)} / {notices.length}개
+						{getPaginationInfo()}
 					</span>
 				</div>
 			{/if}
