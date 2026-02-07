@@ -1,7 +1,7 @@
 import { apiClient } from '$lib/api/client';
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch }) => {
+export const load: PageServerLoad = async ({ fetch }) => {
 	try {
 		const [recentNotices, stats] = await Promise.all([
 			apiClient.getRecentNotices(fetch),
