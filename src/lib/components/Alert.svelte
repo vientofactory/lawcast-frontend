@@ -4,7 +4,7 @@
 		faInfo,
 		faRefresh,
 		faTriangleExclamation,
-		faX
+		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { onMount } from 'svelte';
@@ -117,7 +117,7 @@
 				{#if showRefresh}
 					<button
 						on:click={handleRefresh}
-						class="flex items-center space-x-1 text-sm {config.buttonClass} underline transition-all duration-200 hover:scale-105"
+						class="flex cursor-pointer items-center space-x-1 text-sm {config.buttonClass} underline"
 						title="페이지 새로고침"
 					>
 						<FontAwesomeIcon icon={faRefresh} class="h-3 w-3" />
@@ -128,7 +128,7 @@
 				{#if customAction}
 					<button
 						on:click={handleCustomAction}
-						class="rounded-lg px-3 py-1.5 text-sm font-semibold {config.customButtonClass} shadow-sm transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-offset-2 focus:outline-none"
+						class="rounded-lg px-3 py-1.5 text-sm font-semibold {config.customButtonClass} cursor-pointer shadow-sm focus:ring-2 focus:ring-offset-2 focus:outline-none"
 					>
 						{customAction.label}
 					</button>
@@ -137,11 +137,11 @@
 				{#if dismissible}
 					<button
 						on:click={handleDismiss}
-						class="rounded-full p-1 {config.buttonClass} transition-all duration-200 hover:scale-110 hover:bg-black/5 focus:ring-2 focus:ring-offset-2 focus:outline-none"
+						class="rounded-full p-1 {config.buttonClass} cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-black/5 focus:ring-2 focus:ring-offset-2 focus:outline-none"
 						aria-label="알림 닫기"
 						title="닫기"
 					>
-						<FontAwesomeIcon icon={faX} class="h-4 w-4" />
+						<FontAwesomeIcon icon={faXmark} class="h-4 w-4" />
 					</button>
 				{/if}
 			</div>

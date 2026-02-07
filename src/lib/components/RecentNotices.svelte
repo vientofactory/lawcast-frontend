@@ -1,16 +1,19 @@
 <script lang="ts">
-	import type { Notice } from '$lib/types/api';
-	import { openExternalLink, downloadFile, isDownloadable } from '$lib/utils/helpers';
+	import type { Notice, SystemStats } from '$lib/types/api';
+	import { openExternalLink, downloadFile, isDownloadable, formatDate } from '$lib/utils/helpers';
 	import {
 		faBell,
 		faExternalLink,
 		faFileDownload,
 		faFileText,
-		faPlus
+		faPlus,
+		faClock,
+		faDatabase
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	export let notices: Notice[] = [];
+	export let stats: SystemStats | undefined = undefined;
 </script>
 
 <div
@@ -34,13 +37,31 @@
 		{/if}
 	</div>
 
+	{#if stats}
+		<div
+			class="mb-4 flex flex-wrap gap-4 rounded-lg bg-gray-50/50 text-xs font-medium text-gray-500"
+		>
+			<div class="flex items-center">
+				<FontAwesomeIcon icon={faDatabase} class="mr-1.5 h-3 w-3 text-green-600" />
+				<span>수집된 입법예고: <span class="text-gray-700">{stats.cache.size}개</span></span>
+			</div>
+			<div class="flex items-center">
+				<FontAwesomeIcon icon={faClock} class="mr-1.5 h-3 w-3 text-blue-600" />
+				<span
+					>마지막 업데이트: <span class="text-gray-700"
+						>{stats.cache.lastUpdated ? formatDate(stats.cache.lastUpdated) : 'N/A'}</span
+					></span
+				>
+			</div>
+		</div>
+	{/if}
+
 	{#if notices.length === 0}
 		<div class="py-8 text-center">
 			<div class="mb-2 text-gray-400">
 				<FontAwesomeIcon icon={faBell} class="mx-auto h-8 w-8" />
 			</div>
 			<p class="text-gray-500">아직 수집된 입법예고가 없습니다.</p>
-			<p class="mt-1 text-sm text-gray-400">서버가 시작되면 자동으로 데이터를 수집합니다.</p>
 		</div>
 	{:else}
 		<div class="space-y-3">

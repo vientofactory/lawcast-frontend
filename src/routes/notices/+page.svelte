@@ -128,9 +128,6 @@
 					<FontAwesomeIcon icon={faBell} class="h-16 w-16 text-gray-400" />
 				</div>
 				<h3 class="mb-3 text-2xl font-bold text-gray-800">입법예고가 없습니다</h3>
-				<p class="mx-auto max-w-md text-lg leading-relaxed text-gray-600">
-					아직 수집된 입법예고가 없습니다. 서버가 시작되면 자동으로 데이터를 수집합니다.
-				</p>
 			</div>
 		{:else}
 			<!-- Notices List -->

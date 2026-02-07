@@ -6,11 +6,13 @@
 	import WebhookGuide from './WebhookGuide.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons';
+	import type { SystemStats } from '$lib/types/api';
 
 	const RECAPTCHA_SITE_KEY_VAL = PUBLIC_RECAPTCHA_SITE_KEY || '';
 
 	// Props
 	export let isInitialLoading = false;
+	export let stats: SystemStats | undefined = undefined;
 	export let onSuccess: (message: string) => void = () => {};
 	export let onError: (message: string) => void = () => {};
 	export let onClearMessage: () => void = () => {};
@@ -156,6 +158,27 @@
 		</div>
 		웹훅 등록
 	</h2>
+
+	<ul class="mb-6 space-y-2 text-sm text-gray-600">
+		<li class="flex items-start">
+			<span class="mt-1.5 mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400"></span>
+			10분마다 자동으로 새로운 입법예고를 확인합니다
+		</li>
+		<li class="flex items-start">
+			<span class="mt-1.5 mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400"></span>
+			새로운 입법예고 발견 시 Discord 웹훅으로 알림을 전송합니다
+		</li>
+		<li class="flex items-start">
+			<span class="mt-1.5 mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400"></span>
+			로그인 없이 간단하게 Discord 웹훅 URL만 등록하면 됩니다
+		</li>
+		{#if stats}
+			<li class="flex items-start font-medium text-blue-700">
+				<span class="mt-1.5 mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600"></span>
+				현재 {stats.webhooks.active.toLocaleString()}개의 채널에 알림을 전송하고 있습니다
+			</li>
+		{/if}
+	</ul>
 
 	<form on:submit|preventDefault={addWebhook} class="space-y-4">
 		<div>

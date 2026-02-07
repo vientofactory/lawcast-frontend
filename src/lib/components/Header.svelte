@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { faBell } from '@fortawesome/free-solid-svg-icons';
+	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 </script>
 
@@ -25,6 +26,15 @@
 					</h1>
 					<p class="mt-1 text-sm font-medium text-gray-600">국회 입법예고 디스코드 알리미</p>
 				</div>
+			</a>
+
+			<a
+				href="https://github.com/vientofactory/lawcast"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-600 transition-all"
+			>
+				<FontAwesomeIcon icon={faGithub} class="h-6 w-6" />
 			</a>
 		</div>
 	</div>

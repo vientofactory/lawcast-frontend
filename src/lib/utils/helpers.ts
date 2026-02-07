@@ -83,7 +83,7 @@ export function normalizeWebhookUrl(url: string): string {
  * 날짜 포맷팅
  */
 export function formatDate(dateString: string | null): string {
-	if (!dateString) return '없음';
+	if (!dateString) return 'N/A';
 	try {
 		const date = new Date(dateString);
 		if (isNaN(date.getTime())) return '날짜 오류';

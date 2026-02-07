@@ -3,8 +3,6 @@
 	import Alert from '$lib/components/Alert.svelte';
 	import WebhookRegistrationForm from '$lib/components/WebhookRegistrationForm.svelte';
 	import RecentNotices from '$lib/components/RecentNotices.svelte';
-	import SystemStats from '$lib/components/SystemStats.svelte';
-	import ServiceInfo from '$lib/components/ServiceInfo.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 
@@ -80,6 +78,7 @@
 			<!-- Webhook Registration -->
 			<WebhookRegistrationForm
 				isInitialLoading={false}
+				{stats}
 				onError={handleWebhookError}
 				onSuccess={handleWebhookSuccess}
 				onClearMessage={clearMessage}
@@ -87,17 +86,7 @@
 			/>
 
 			<!-- Recent Notices -->
-			<RecentNotices notices={recentNotices} />
-		</div>
-
-		<!-- Stats Section -->
-		<div class="mt-8">
-			<SystemStats {stats} />
-		</div>
-
-		<!-- Info Section -->
-		<div class="mt-8">
-			<ServiceInfo />
+			<RecentNotices notices={recentNotices} {stats} />
 		</div>
 	</main>
 </div>
