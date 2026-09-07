@@ -23,6 +23,8 @@ import type {
 	WebhookRegistrationRequest,
 	WebPushPublicConfig,
 	WebPushSubscriptionRequest,
+	DiscussionWebPushStatus,
+	WebPushNoticeStatus,
 	ApiError,
 	CrawlingTransparencyData,
 	ProposalStatisticsData,
@@ -586,6 +588,79 @@ export async function registerWebPushSubscription(
 	}
 }
 
+export async function getDiscussionWebPushStatus(
+	threadId: number,
+	endpoint: string,
+	customFetch?: Fetch
+): Promise<DiscussionWebPushStatus> {
+	try {
+		return await request<DiscussionWebPushStatus>(
+			`/push/subscriptions/discussions/${threadId}/status?endpoint=${encodeURIComponent(endpoint)}`,
+			{ method: 'GET' },
+			customFetch
+		);
+	} catch (error) {
+		console.error('Failed to load discussion web push status:', error);
+		throw normalizeError(error);
+	}
+}
+
+export async function getWebPushNoticeStatus(
+	endpoint: string,
+	customFetch?: Fetch
+): Promise<WebPushNoticeStatus> {
+	try {
+		return await request<WebPushNoticeStatus>(
+			`/push/subscriptions/notice-status?endpoint=${encodeURIComponent(endpoint)}`,
+			{ method: 'GET' },
+			customFetch
+		);
+	} catch (error) {
+		console.error('Failed to load notice web push status:', error);
+		throw normalizeError(error);
+	}
+}
+
+export async function updateWebPushNoticePreference(
+	endpoint: string,
+	enabled: boolean,
+	customFetch?: Fetch
+): Promise<void> {
+	try {
+		await request(
+			'/push/subscriptions/preferences',
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ endpoint, noticeNotificationsEnabled: enabled })
+			},
+			customFetch
+		);
+	} catch (error) {
+		console.error('Failed to update notice web push preference:', error);
+		throw normalizeError(error);
+	}
+}
+
+export async function unregisterDiscussionWebPushBinding(
+	threadId: number,
+	endpoint: string,
+	customFetch?: Fetch
+): Promise<void> {
+	try {
+		await request(
+			`/push/subscriptions/discussions/${threadId}`,
+			{
+				method: 'DELETE',
+				body: JSON.stringify({ endpoint })
+			},
+			customFetch
+		);
+	} catch (error) {
+		console.error('Failed to unregister discussion web push binding:', error);
+		throw normalizeError(error);
+	}
+}
+
 export async function unregisterWebPushSubscription(
 	endpoint: string,
 	customFetch?: Fetch
@@ -832,6 +907,10 @@ export const apiClient = {
 	registerWebhook,
 	getWebPushPublicConfig,
 	registerWebPushSubscription,
+	getDiscussionWebPushStatus,
+	getWebPushNoticeStatus,
+	updateWebPushNoticePreference,
+	unregisterDiscussionWebPushBinding,
 	unregisterWebPushSubscription,
 	getCrawlingTransparency,
 	getProposalStatistics,

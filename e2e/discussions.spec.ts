@@ -24,6 +24,7 @@ test.describe('Discussion UI', () => {
 		await threadLink.click();
 		await expect(page).toHaveURL(new RegExp(`/notices/${noticeNum}/discussions/${threadId}`));
 		await expect(page.getByTestId('discussion-thread-detail')).toBeVisible();
+		await expect(page.getByTestId('discussion-quote-push-settings')).toBeVisible();
 	});
 
 	test('submits a reply in a discussion thread', async ({ page }) => {

@@ -380,11 +380,20 @@ export interface WebPushPublicConfig {
 	publicKey: string | null;
 }
 
+export interface DiscussionWebPushStatus {
+	isBound: boolean;
+}
+
+export interface WebPushNoticeStatus {
+	enabled: boolean;
+}
+
 export interface WebPushSubscriptionRequest {
 	endpoint: string;
 	p256dh: string;
 	auth: string;
 	proof: string;
+	threadId?: number;
 }
 
 export interface WebhookValidationResult {

@@ -6,6 +6,7 @@
 		faLock,
 		faLockOpen,
 		faPaperPlane,
+		faBell,
 		faUser,
 		faKey,
 		faSpinner
@@ -27,6 +28,7 @@
 	export let onEditComment: ((comment: DiscussionComment) => void) | undefined = undefined;
 	export let onDeleteComment: ((comment: DiscussionComment) => void) | undefined = undefined;
 	export let onToggleStatus: ((thread: DiscussionThread) => void) | undefined = undefined;
+	export let onOpenQuotePushConsent: (() => void) | undefined = undefined;
 
 	let replyNickname = '';
 	let replyPassword = '';
@@ -88,6 +90,16 @@
 			목록으로
 		</button>
 		<div class="flex items-center gap-2">
+			<button
+				type="button"
+				on:click={() => onOpenQuotePushConsent?.()}
+				class="lc-button-neutral inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--lc-border-soft)] px-2.5 py-1 text-xs font-medium"
+				data-testid="discussion-quote-push-settings"
+				title="인용 알림 설정"
+			>
+				<FontAwesomeIcon icon={faBell} class="h-3 w-3" />
+				<span class="hidden sm:inline">인용 알림</span>
+			</button>
 			<button
 				type="button"
 				on:click={() => onToggleStatus?.(thread)}

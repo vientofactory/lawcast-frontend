@@ -23,6 +23,7 @@
 	import ThreadDetailView from '$lib/components/discussions/ThreadDetailView.svelte';
 	import type { Component, ComponentProps } from 'svelte';
 	import type CommentActionModal from '$lib/components/discussions/CommentActionModal.svelte';
+	import type DiscussionPushConsentModal from '$lib/components/discussions/DiscussionPushConsentModal.svelte';
 
 	export let data: {
 		noticeNum: number;
@@ -62,6 +63,9 @@
 	let actionErrorMessage = '';
 	let CommentActionModalComponent: Component<ComponentProps<typeof CommentActionModal>> | null =
 		null;
+	let DiscussionPushConsentModalComponent: Component<
+		ComponentProps<typeof DiscussionPushConsentModal>
+	> | null = null;
 
 	let errorMessage = data.discussionError?.message ?? '';
 	let successMessage = '';
@@ -70,6 +74,36 @@
 	let isLoading = false;
 	let rateLimitRemaining = data.discussionError?.retryAfter ?? 0;
 	let rateLimitTimer: ReturnType<typeof setInterval> | null = null;
+	let isQuotePushConsentOpen = false;
+	const quotePushDismissalKey = `lawcast-quote-push-dismissed:${data.threadId}`;
+	const newThreadMarkerKey = `lawcast-new-discussion:${data.threadId}`;
+
+	function canPromptForQuotePush(): boolean {
+		return (
+			typeof window !== 'undefined' &&
+			'serviceWorker' in navigator &&
+			'PushManager' in window &&
+			'Notification' in window &&
+			Notification.permission !== 'denied' &&
+			localStorage.getItem(quotePushDismissalKey) !== '1'
+		);
+	}
+
+	async function ensureQuotePushConsentModal(): Promise<void> {
+		if (DiscussionPushConsentModalComponent) return;
+
+		const mod = await import('$lib/components/discussions/DiscussionPushConsentModal.svelte');
+		DiscussionPushConsentModalComponent = mod.default;
+		await tick();
+	}
+
+	async function openQuotePushConsent(): Promise<void> {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.removeItem(quotePushDismissalKey);
+		}
+		await ensureQuotePushConsentModal();
+		isQuotePushConsentOpen = true;
+	}
 
 	function showSuccess(msg: string) {
 		successMessage = msg;
@@ -94,6 +128,12 @@
 	onMount(() => {
 		if (data.discussionError) {
 			startRateLimitCooldown(data.discussionError.retryAfter ?? 60);
+		}
+		if (sessionStorage.getItem(newThreadMarkerKey) === '1') {
+			sessionStorage.removeItem(newThreadMarkerKey);
+			if (canPromptForQuotePush()) {
+				void openQuotePushConsent();
+			}
 		}
 	});
 
@@ -141,6 +181,7 @@
 			return;
 		}
 		try {
+			const wasFirstOpinion = discussionData.comments.length === 1;
 			const newComment = await apiClient.addDiscussionComment(data.threadId, payload);
 			discussionData = {
 				...discussionData,
@@ -154,6 +195,9 @@
 				threadDetailViewComponent.clearReplyForm();
 			}
 			showSuccess('새 의견이 등록되었습니다.');
+			if (wasFirstOpinion && canPromptForQuotePush()) {
+				void openQuotePushConsent();
+			}
 		} catch (err: unknown) {
 			console.error('Failed to add comment:', err);
 			errorMessage = discussionErrorMessage(err, '의견 등록 중 오류가 발생했습니다.');
@@ -436,6 +480,7 @@
 						onEditComment={openEditCommentModal}
 						onDeleteComment={openDeleteCommentModal}
 						onToggleStatus={openToggleThreadStatusModal}
+						onOpenQuotePushConsent={openQuotePushConsent}
 					/>
 				{/key}
 			</section>
@@ -474,5 +519,14 @@
 		onSubmitEdit={handleSubmitEdit}
 		onSubmitDelete={handleSubmitDelete}
 		onSubmitToggleStatus={handleSubmitToggleStatus}
+	/>
+{/if}
+
+{#if DiscussionPushConsentModalComponent}
+	<svelte:component
+		this={DiscussionPushConsentModalComponent}
+		isOpen={isQuotePushConsentOpen}
+		threadId={data.threadId}
+		onClose={() => (isQuotePushConsentOpen = false)}
 	/>
 {/if}
