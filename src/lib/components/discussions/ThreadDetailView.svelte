@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { onMount } from 'svelte';
 	import {
 		faArrowLeft,
 		faComments,
@@ -29,11 +30,27 @@
 	export let onDeleteComment: ((comment: DiscussionComment) => void) | undefined = undefined;
 	export let onToggleStatus: ((thread: DiscussionThread) => void) | undefined = undefined;
 	export let onOpenQuotePushConsent: (() => void) | undefined = undefined;
+	export let onLoadMoreComments: (() => void | Promise<void>) | undefined = undefined;
+	export let isLoadingMoreComments = false;
 
 	let replyNickname = '';
 	let replyPassword = '';
 	let replyContent = '';
 	let replyErrorMessage = '';
+	let commentsLoadSentinel: HTMLDivElement;
+
+	onMount(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting && !isLoadingMoreComments) {
+					void onLoadMoreComments?.();
+				}
+			},
+			{ rootMargin: '320px 0px' }
+		);
+		if (commentsLoadSentinel) observer.observe(commentsLoadSentinel);
+		return () => observer.disconnect();
+	});
 
 	function handleBack() {
 		onBack?.();
@@ -139,7 +156,7 @@
 				class="lc-chip-blue inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
 			>
 				<FontAwesomeIcon icon={faComments} class="h-2.5 w-2.5" />
-				의견 {comments.length}개
+				의견 {thread.commentCount}개
 			</span>
 		</div>
 		<h2 class="lc-text-primary mt-2 text-lg font-bold">
@@ -166,6 +183,38 @@
 				onDelete={(c) => onDeleteComment?.(c)}
 			/>
 		{/each}
+	</div>
+	<div bind:this={commentsLoadSentinel} class="min-h-8" aria-live="polite">
+		{#if isLoadingMoreComments}
+			<div
+				class="space-y-3 py-1"
+				data-testid="discussion-comment-skeletons"
+				aria-label="의견을 불러오는 중"
+			>
+				{#each [0, 1, 2] as skeleton (skeleton)}
+					<div
+						class="rounded-xl border border-[var(--lc-border-soft)] bg-[var(--lc-surface-primary)] p-4"
+						aria-hidden="true"
+					>
+						<div
+							class="mb-2.5 flex items-center justify-between gap-3 border-b border-[var(--lc-border-soft)] pb-2.5"
+						>
+							<div class="flex items-center gap-2">
+								<div class="h-5 w-10 animate-pulse rounded-md bg-[var(--lc-surface-muted)]"></div>
+								<div class="h-3 w-20 animate-pulse rounded bg-[var(--lc-surface-muted)]"></div>
+								<div class="h-3 w-24 animate-pulse rounded bg-[var(--lc-surface-muted)]"></div>
+							</div>
+							<div class="h-3 w-16 animate-pulse rounded bg-[var(--lc-surface-muted)]"></div>
+						</div>
+						<div class="space-y-2" style={`animation-delay: ${skeleton * 90}ms`}>
+							<div class="h-3 w-11/12 animate-pulse rounded bg-[var(--lc-surface-muted)]"></div>
+							<div class="h-3 w-4/5 animate-pulse rounded bg-[var(--lc-surface-muted)]"></div>
+							<div class="h-3 w-2/5 animate-pulse rounded bg-[var(--lc-surface-muted)]"></div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 
 	<!-- Reply Box -->

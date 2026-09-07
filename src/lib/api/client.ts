@@ -782,15 +782,24 @@ export async function createNoticeDiscussion(
 }
 
 /**
- * 토론 스레드 상세 및 전체 레스 목록 조회
+ * 토론 스레드 상세 및 댓글 페이지 조회
  */
 export async function getDiscussionThread(
 	threadId: number,
+	params: { cursor?: number; limit?: number } = {},
 	customFetch?: Fetch
 ): Promise<DiscussionThreadDetailResponse> {
 	try {
+		const query = new URLSearchParams();
+		if (params.cursor !== undefined && params.cursor >= 0) {
+			query.set('cursor', String(params.cursor));
+		}
+		if (params.limit !== undefined && params.limit > 0) {
+			query.set('limit', String(params.limit));
+		}
+		const suffix = query.toString() ? `?${query.toString()}` : '';
 		return await request<DiscussionThreadDetailResponse>(
-			`/discussions/threads/${threadId}`,
+			`/discussions/threads/${threadId}${suffix}`,
 			{ method: 'GET' },
 			customFetch
 		);

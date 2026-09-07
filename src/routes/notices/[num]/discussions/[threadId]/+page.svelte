@@ -72,6 +72,7 @@
 	let successTimer: ReturnType<typeof setTimeout> | null = null;
 	let threadDetailViewComponent: ThreadDetailView;
 	let isLoading = false;
+	let isLoadingMoreComments = false;
 	let rateLimitRemaining = data.discussionError?.retryAfter ?? 0;
 	let rateLimitTimer: ReturnType<typeof setInterval> | null = null;
 	let isQuotePushConsentOpen = false;
@@ -158,13 +159,41 @@
 		isLoading = true;
 		errorMessage = '';
 		try {
-			discussionData = await apiClient.getDiscussionThread(data.threadId);
+			discussionData = await apiClient.getDiscussionThread(data.threadId, { limit: 20 });
 			errorMessage = '';
 		} catch (err: unknown) {
 			console.error('Failed to reload discussion:', err);
 			errorMessage = discussionErrorMessage(err, '토론 내용을 새로고침하지 못했습니다.');
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	async function loadMoreComments() {
+		if (!discussionData || isLoadingMoreComments || discussionData.hasMore !== true) return;
+
+		isLoadingMoreComments = true;
+		try {
+			const nextPage = await apiClient.getDiscussionThread(data.threadId, {
+				cursor: discussionData.nextCursor ?? 0,
+				limit: 20
+			});
+			const existingIds = new Set(discussionData.comments.map((comment) => comment.id));
+			discussionData = {
+				...discussionData,
+				thread: nextPage.thread,
+				comments: [
+					...discussionData.comments,
+					...nextPage.comments.filter((comment) => !existingIds.has(comment.id))
+				],
+				hasMore: nextPage.hasMore,
+				nextCursor: nextPage.nextCursor
+			};
+		} catch (err: unknown) {
+			console.error('Failed to load more discussion comments:', err);
+			errorMessage = discussionErrorMessage(err, '추가 의견을 불러오지 못했습니다.');
+		} finally {
+			isLoadingMoreComments = false;
 		}
 	}
 
@@ -187,7 +216,7 @@
 				...discussionData,
 				thread: {
 					...discussionData.thread,
-					commentCount: discussionData.comments.length + 1
+					commentCount: discussionData.thread.commentCount + 1
 				},
 				comments: [...discussionData.comments, newComment]
 			};
@@ -318,12 +347,21 @@
 				password: statusPayload.password,
 				status: statusPayload.status
 			});
+			const latestComments = await apiClient.getDiscussionThread(data.threadId, {
+				cursor: Math.max(0, updated.commentCount - 1),
+				limit: 20
+			});
+			const existingIds = new Set(discussionData.comments.map((comment) => comment.id));
 			discussionData = {
 				...discussionData,
-				thread: updated
+				thread: updated,
+				comments: [
+					...discussionData.comments,
+					...latestComments.comments.filter((comment) => !existingIds.has(comment.id))
+				],
+				hasMore: latestComments.hasMore,
+				nextCursor: latestComments.nextCursor
 			};
-			const refreshedDiscussion = await apiClient.getDiscussionThread(data.threadId);
-			discussionData = refreshedDiscussion;
 			isActionModalOpen = false;
 			showSuccess(
 				updated.status === DiscussionThreadStatus.OPEN
@@ -475,6 +513,8 @@
 						{comments}
 						{isSubmittingComment}
 						isRateLimited={rateLimitRemaining > 0}
+						onLoadMoreComments={loadMoreComments}
+						{isLoadingMoreComments}
 						onBack={handleBack}
 						onSubmitComment={handleAddComment}
 						onEditComment={openEditCommentModal}

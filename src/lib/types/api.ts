@@ -520,6 +520,8 @@ export interface DiscussionThreadListResponse {
 export interface DiscussionThreadDetailResponse {
 	thread: DiscussionThread;
 	comments: DiscussionComment[];
+	hasMore?: boolean;
+	nextCursor?: number | null;
 }
 
 export interface CreateThreadPayload {

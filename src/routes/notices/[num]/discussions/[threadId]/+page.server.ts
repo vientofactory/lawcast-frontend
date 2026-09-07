@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 		const detail = await apiClient.getNoticeDetail(noticeNum, {}, fetch);
 		let discussion;
 		try {
-			discussion = await apiClient.getDiscussionThread(threadId, fetch);
+			discussion = await apiClient.getDiscussionThread(threadId, {}, fetch);
 		} catch (discussionError) {
 			if (getHttpStatus(discussionError) === 429) {
 				return {
