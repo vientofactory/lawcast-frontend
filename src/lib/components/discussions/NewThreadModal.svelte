@@ -111,7 +111,7 @@
 					type="button"
 					on:click={handleClose}
 					disabled={isSubmitting}
-					class="lc-text-muted hover:lc-text-primary p-1.5 transition-colors"
+					class="lc-text-muted hover:lc-text-primary p-1.5 transition-colors cursor-pointer"
 					aria-label="닫기"
 				>
 					<FontAwesomeIcon icon={faXmark} class="h-4 w-4" />

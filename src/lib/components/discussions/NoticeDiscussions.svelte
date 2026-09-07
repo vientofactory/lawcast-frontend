@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -15,7 +15,8 @@
 		CreateThreadPayload
 	} from '$lib/types/api';
 	import ThreadListView from './ThreadListView.svelte';
-	import NewThreadModal from './NewThreadModal.svelte';
+	import type { Component, ComponentProps } from 'svelte';
+	import type NewThreadModal from './NewThreadModal.svelte';
 
 	export let noticeNum: number;
 	export let initialDiscussions: DiscussionThreadListResponse | undefined = undefined;
@@ -29,6 +30,7 @@
 	let isNewThreadModalOpen = false;
 	let isSubmittingNewThread = false;
 	let newThreadErrorMessage = '';
+	let NewThreadModalComponent: Component<ComponentProps<typeof NewThreadModal>> | null = null;
 
 	let errorMessage = initialDiscussionError?.message ?? '';
 	let successMessage = '';
@@ -87,8 +89,14 @@
 		}
 	}
 
-	function openNewThreadModal() {
+	// Mount the modal with isOpen=false first so the intro transition still fires on first open.
+	async function openNewThreadModal() {
 		newThreadErrorMessage = '';
+		if (!NewThreadModalComponent) {
+			const mod = await import('./NewThreadModal.svelte');
+			NewThreadModalComponent = mod.default;
+			await tick();
+		}
 		isNewThreadModalOpen = true;
 	}
 
@@ -186,11 +194,14 @@
 </section>
 
 <!-- Modals -->
-<NewThreadModal
-	isOpen={isNewThreadModalOpen}
-	isSubmitting={isSubmittingNewThread}
-	isRateLimited={rateLimitRemaining > 0}
-	externalErrorMessage={newThreadErrorMessage}
-	onClose={() => (isNewThreadModalOpen = false)}
-	onSubmit={handleCreateThread}
-/>
+{#if NewThreadModalComponent}
+	<svelte:component
+		this={NewThreadModalComponent}
+		isOpen={isNewThreadModalOpen}
+		isSubmitting={isSubmittingNewThread}
+		isRateLimited={rateLimitRemaining > 0}
+		externalErrorMessage={newThreadErrorMessage}
+		onClose={() => (isNewThreadModalOpen = false)}
+		onSubmit={handleCreateThread}
+	/>
+{/if}

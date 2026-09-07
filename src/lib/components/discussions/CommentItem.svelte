@@ -7,10 +7,11 @@
 		faQuoteRight,
 		faArrowRight,
 		faUser,
+		faRobot,
 		faClock,
 		faBan
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { DiscussionComment } from '$lib/types/api';
+	import { DiscussionMessageType, type DiscussionComment } from '$lib/types/api';
 	import { formatDateTimeKST } from '$lib/utils/helpers';
 
 	export let comment: DiscussionComment;
@@ -148,7 +149,9 @@
 	class={`group relative rounded-xl border transition-colors ${
 		comment.isDeleted
 			? 'border-[var(--lc-border-soft)] bg-[var(--lc-surface-muted)]/50 opacity-70'
-			: 'border-[var(--lc-border-soft)] bg-[var(--lc-surface-primary)] hover:border-blue-500/40'
+			: comment.messageType === DiscussionMessageType.SYSTEM
+				? 'border-amber-400/70 bg-[var(--lc-surface-primary)] hover:border-amber-400'
+				: 'border-[var(--lc-border-soft)] bg-[var(--lc-surface-primary)] hover:border-blue-500/40'
 	} p-4`}
 >
 	<!-- Comment Topbar -->
@@ -165,14 +168,19 @@
 				#{comment.sequence}
 			</button>
 			<span class="lc-text-primary inline-flex items-center gap-1 font-semibold">
-				<FontAwesomeIcon icon={faUser} class="lc-text-muted h-3 w-3" />
+				<FontAwesomeIcon
+					icon={comment.messageType === DiscussionMessageType.SYSTEM ? faRobot : faUser}
+					class="lc-text-muted h-3 w-3"
+				/>
 				{comment.authorNickname}
 			</span>
-			<span
-				class="lc-chip-muted rounded-md px-1.5 py-0.5 font-mono text-[11px] text-[var(--lc-text-muted)]"
-			>
-				{comment.authorIpMasked}
-			</span>
+			{#if comment.messageType !== DiscussionMessageType.SYSTEM}
+				<span
+					class="lc-chip-muted rounded-md px-1.5 py-0.5 font-mono text-[11px] text-[var(--lc-text-muted)]"
+				>
+					{comment.authorIpMasked}
+				</span>
+			{/if}
 			<span class="lc-text-muted inline-flex items-center gap-1 text-[11px]">
 				<FontAwesomeIcon icon={faClock} class="h-2.5 w-2.5" />
 				{formatDateTimeKST(comment.createdAt)}
@@ -183,7 +191,7 @@
 		</div>
 
 		<!-- Action Buttons -->
-		{#if !comment.isDeleted}
+		{#if !comment.isDeleted && comment.messageType !== DiscussionMessageType.SYSTEM}
 			<div
 				class="flex items-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
 			>

@@ -2,7 +2,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { DiscussionThreadStatus } from '$lib/types/api';
 	import {
@@ -21,7 +21,8 @@
 	} from '$lib/types/api';
 	import { apiClient, getRateLimitRetryAfter, isRateLimitError } from '$lib/api/client';
 	import ThreadDetailView from '$lib/components/discussions/ThreadDetailView.svelte';
-	import CommentActionModal from '$lib/components/discussions/CommentActionModal.svelte';
+	import type { Component, ComponentProps } from 'svelte';
+	import type CommentActionModal from '$lib/components/discussions/CommentActionModal.svelte';
 
 	export let data: {
 		noticeNum: number;
@@ -59,6 +60,8 @@
 	let actionTargetThread: DiscussionThread | null = null;
 	let isSubmittingAction = false;
 	let actionErrorMessage = '';
+	let CommentActionModalComponent: Component<ComponentProps<typeof CommentActionModal>> | null =
+		null;
 
 	let errorMessage = data.discussionError?.message ?? '';
 	let successMessage = '';
@@ -159,28 +162,40 @@
 		}
 	}
 
-	function openEditCommentModal(comment: DiscussionComment) {
-		actionModalMode = 'edit-comment';
-		actionTargetComment = comment;
-		actionTargetThread = null;
+	// Mount the modal with isOpen=false first so the intro transition still fires on first open.
+	async function openActionModal(setup: () => void) {
+		setup();
 		actionErrorMessage = '';
+		if (!CommentActionModalComponent) {
+			const mod = await import('$lib/components/discussions/CommentActionModal.svelte');
+			CommentActionModalComponent = mod.default;
+			await tick();
+		}
 		isActionModalOpen = true;
+	}
+
+	function openEditCommentModal(comment: DiscussionComment) {
+		openActionModal(() => {
+			actionModalMode = 'edit-comment';
+			actionTargetComment = comment;
+			actionTargetThread = null;
+		});
 	}
 
 	function openDeleteCommentModal(comment: DiscussionComment) {
-		actionModalMode = 'delete-comment';
-		actionTargetComment = comment;
-		actionTargetThread = null;
-		actionErrorMessage = '';
-		isActionModalOpen = true;
+		openActionModal(() => {
+			actionModalMode = 'delete-comment';
+			actionTargetComment = comment;
+			actionTargetThread = null;
+		});
 	}
 
 	function openToggleThreadStatusModal(targetThread: DiscussionThread) {
-		actionModalMode = 'toggle-thread-status';
-		actionTargetThread = targetThread;
-		actionTargetComment = null;
-		actionErrorMessage = '';
-		isActionModalOpen = true;
+		openActionModal(() => {
+			actionModalMode = 'toggle-thread-status';
+			actionTargetThread = targetThread;
+			actionTargetComment = null;
+		});
 	}
 
 	async function handleSubmitEdit(editPayload: {
@@ -263,6 +278,8 @@
 				...discussionData,
 				thread: updated
 			};
+			const refreshedDiscussion = await apiClient.getDiscussionThread(data.threadId);
+			discussionData = refreshedDiscussion;
 			isActionModalOpen = false;
 			showSuccess(
 				updated.status === DiscussionThreadStatus.OPEN
@@ -407,18 +424,20 @@
 			<section
 				class="lc-panel-card rounded-2xl border border-[var(--lc-border-soft)] bg-[var(--lc-surface-elevated)] p-6"
 			>
-				<ThreadDetailView
-					bind:this={threadDetailViewComponent}
-					{thread}
-					{comments}
-					{isSubmittingComment}
-					isRateLimited={rateLimitRemaining > 0}
-					onBack={handleBack}
-					onSubmitComment={handleAddComment}
-					onEditComment={openEditCommentModal}
-					onDeleteComment={openDeleteCommentModal}
-					onToggleStatus={openToggleThreadStatusModal}
-				/>
+				{#key thread.status}
+					<ThreadDetailView
+						bind:this={threadDetailViewComponent}
+						{thread}
+						{comments}
+						{isSubmittingComment}
+						isRateLimited={rateLimitRemaining > 0}
+						onBack={handleBack}
+						onSubmitComment={handleAddComment}
+						onEditComment={openEditCommentModal}
+						onDeleteComment={openDeleteCommentModal}
+						onToggleStatus={openToggleThreadStatusModal}
+					/>
+				{/key}
 			</section>
 		{:else}
 			<section class="lc-banner-warning rounded-2xl border p-6 text-center" aria-live="polite">
@@ -441,16 +460,19 @@
 	</main>
 </div>
 
-<CommentActionModal
-	isOpen={isActionModalOpen && discussionData !== null}
-	mode={actionModalMode}
-	targetComment={actionTargetComment}
-	targetThread={actionTargetThread}
-	isSubmitting={isSubmittingAction}
-	isRateLimited={rateLimitRemaining > 0}
-	externalErrorMessage={actionErrorMessage}
-	onClose={() => (isActionModalOpen = false)}
-	onSubmitEdit={handleSubmitEdit}
-	onSubmitDelete={handleSubmitDelete}
-	onSubmitToggleStatus={handleSubmitToggleStatus}
-/>
+{#if CommentActionModalComponent}
+	<svelte:component
+		this={CommentActionModalComponent}
+		isOpen={isActionModalOpen && discussionData !== null}
+		mode={actionModalMode}
+		targetComment={actionTargetComment}
+		targetThread={actionTargetThread}
+		isSubmitting={isSubmittingAction}
+		isRateLimited={rateLimitRemaining > 0}
+		externalErrorMessage={actionErrorMessage}
+		onClose={() => (isActionModalOpen = false)}
+		onSubmitEdit={handleSubmitEdit}
+		onSubmitDelete={handleSubmitDelete}
+		onSubmitToggleStatus={handleSubmitToggleStatus}
+	/>
+{/if}

@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { DiscussionThreadStatus } from '$lib/types/api';
+import { DiscussionMessageType, DiscussionThreadStatus } from '$lib/types/api';
 import type {
 	ArchiveNoticeListResponse,
 	QuickKeywordSuggestionsResponse,
@@ -450,6 +450,7 @@ export function getMockDiscussionThread(
 				threadId,
 				noticeNum: resolvedNoticeNum,
 				sequence: 1,
+				messageType: DiscussionMessageType.USER,
 				authorNickname: '익명',
 				authorIpMasked: '127.0.***.***',
 				content: '모의 토론 시작 의견입니다.',

@@ -468,6 +468,11 @@ export enum DiscussionThreadStatus {
 	CLOSED = 'closed'
 }
 
+export enum DiscussionMessageType {
+	USER = 'user',
+	SYSTEM = 'system'
+}
+
 export interface DiscussionThread {
 	id: number;
 	noticeNum: number;
@@ -485,6 +490,7 @@ export interface DiscussionComment {
 	threadId: number;
 	noticeNum: number;
 	sequence: number;
+	messageType: DiscussionMessageType;
 	authorNickname: string;
 	authorIpMasked: string;
 	content: string;
