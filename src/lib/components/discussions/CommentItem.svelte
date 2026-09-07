@@ -13,6 +13,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { DiscussionMessageType, type DiscussionComment } from '$lib/types/api';
 	import { formatDateTimeKST } from '$lib/utils/helpers';
+	import { onMount } from 'svelte';
 
 	export let comment: DiscussionComment;
 	export let isThreadClosed = false;
@@ -44,14 +45,23 @@
 		const targetEl = document.getElementById(`res-${sequence}`);
 		if (targetEl) {
 			targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			targetEl.classList.remove('lc-comment-highlight');
-			void targetEl.offsetWidth;
-			targetEl.classList.add('lc-comment-highlight');
-			setTimeout(() => {
-				targetEl?.classList.remove('lc-comment-highlight');
-			}, 1800);
+			playHighlight(targetEl);
 		}
 	}
+
+	function playHighlight(targetEl: HTMLElement): void {
+		targetEl.classList.remove('lc-comment-highlight');
+		void targetEl.offsetWidth;
+		targetEl.classList.add('lc-comment-highlight');
+		setTimeout(() => targetEl.classList.remove('lc-comment-highlight'), 1800);
+	}
+
+	onMount(() => {
+		if (window.location.hash === `#res-${comment.sequence}`) {
+			const targetEl = document.getElementById(`res-${comment.sequence}`);
+			if (targetEl) playHighlight(targetEl);
+		}
+	});
 
 	type ContentToken =
 		{ type: 'text'; text: string } | { type: 'mention'; sequence: number; raw: string };
@@ -146,7 +156,7 @@
 <div
 	id={`res-${comment.sequence}`}
 	data-testid={`discussion-comment-${comment.sequence}`}
-	class={`group relative rounded-xl border transition-colors ${
+	class={`group relative scroll-mt-24 rounded-xl border transition-colors ${
 		comment.isDeleted
 			? 'border-[var(--lc-border-soft)] bg-[var(--lc-surface-muted)]/50 opacity-70'
 			: comment.messageType === DiscussionMessageType.SYSTEM

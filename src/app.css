@@ -1506,14 +1506,19 @@ html[data-theme='dark'] .lc-alert {
 }
 @keyframes lc-comment-flash {
 	0% {
-		background-color: color-mix(in srgb, var(--lc-text-accent) 22%, var(--lc-surface-primary));
+		border-color: var(--lc-border-soft);
+	}
+	12% {
 		border-color: var(--lc-text-accent);
-		transform: scale(1.008);
+	}
+	25% {
+		border-color: var(--lc-border-soft);
+	}
+	37% {
+		border-color: var(--lc-text-accent);
 	}
 	100% {
-		background-color: var(--lc-surface-primary);
 		border-color: var(--lc-border-soft);
-		transform: scale(1);
 	}
 }
 

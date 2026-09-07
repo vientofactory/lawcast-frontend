@@ -55,6 +55,7 @@
 	<WebPushConsentForm
 		{threadId}
 		showFullUnsubscribeControl={false}
+		showInlineFeedback={false}
 		compact
 		onSuccess={handleSuccess}
 		onError={handleError}

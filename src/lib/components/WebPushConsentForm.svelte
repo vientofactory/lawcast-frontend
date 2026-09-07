@@ -25,6 +25,7 @@
 	export let threadId: number | undefined = undefined;
 	export let showFullUnsubscribeControl = true;
 	export let compact = false;
+	export let showInlineFeedback = true;
 
 	let isSupported = false;
 	let isPermissionDenied = false;
@@ -42,6 +43,7 @@
 	let isSolvingPoW = false;
 	let isFullUnsubscribeOpen = false;
 	let isFullUnsubscribeConfirmOpen = false;
+	let feedback: { type: 'success' | 'error'; message: string } | null = null;
 	let FullUnsubscribeConfirmModalComponent: Component<
 		ComponentProps<typeof FullUnsubscribeConfirmModal>
 	> | null = null;
@@ -49,6 +51,17 @@
 
 	function updatePowStatus(status: PowStatus) {
 		powState = applyPowStatus(powState, status);
+	}
+
+	function clearFeedback() {
+		feedback = null;
+		onClearMessage();
+	}
+
+	function showFeedback(type: 'success' | 'error', message: string) {
+		feedback = { type, message };
+		if (type === 'success') onSuccess(message);
+		else onError(message);
 	}
 
 	function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -139,7 +152,10 @@
 			}
 			await refreshDebugState(subscription);
 		} catch (error) {
-			onError(error instanceof Error ? error.message : '웹 푸시 상태 확인에 실패했습니다.');
+			showFeedback(
+				'error',
+				error instanceof Error ? error.message : '웹 푸시 상태 확인에 실패했습니다.'
+			);
 		} finally {
 			isLoading = false;
 		}
@@ -148,7 +164,7 @@
 	async function enableWebPush() {
 		if (isSubmitting || isSolvingPoW || !isSupported) return;
 
-		onClearMessage();
+		clearFeedback();
 		isSubmitting = true;
 		let subscriptionCreatedInThisAttempt = false;
 		let activeSubscription: PushSubscription | null = null;
@@ -197,7 +213,7 @@
 			}
 			isDiscussionBound = threadId !== undefined;
 			await refreshDebugState(subscription);
-			onSuccess('웹 푸시 알림이 활성화되었습니다.');
+			showFeedback('success', '웹 푸시 알림이 활성화되었습니다.');
 		} catch (error) {
 			if (subscriptionCreatedInThisAttempt && activeSubscription) {
 				try {
@@ -215,7 +231,10 @@
 
 			isSolvingPoW = false;
 			powState = createPowDisplayState();
-			onError(error instanceof Error ? error.message : '웹 푸시 활성화에 실패했습니다.');
+			showFeedback(
+				'error',
+				error instanceof Error ? error.message : '웹 푸시 활성화에 실패했습니다.'
+			);
 		} finally {
 			isSubmitting = false;
 			if (!isSolvingPoW) {
@@ -227,7 +246,7 @@
 	async function disableWebPush() {
 		if (isSubmitting || !isSupported || !isNoticeNotificationsEnabled) return;
 
-		onClearMessage();
+		clearFeedback();
 		isSubmitting = true;
 
 		try {
@@ -237,9 +256,12 @@
 
 			await apiClient.updateWebPushNoticePreference(subscription.endpoint, false);
 			isNoticeNotificationsEnabled = false;
-			onSuccess('입법예고 알림이 해지되었습니다.');
+			showFeedback('success', '입법예고 알림이 해지되었습니다.');
 		} catch (error) {
-			onError(error instanceof Error ? error.message : '웹 푸시 해지에 실패했습니다.');
+			showFeedback(
+				'error',
+				error instanceof Error ? error.message : '웹 푸시 해지에 실패했습니다.'
+			);
 		} finally {
 			isSubmitting = false;
 		}
@@ -250,7 +272,7 @@
 			return;
 		}
 
-		onClearMessage();
+		clearFeedback();
 		isSubmitting = true;
 
 		try {
@@ -259,9 +281,12 @@
 
 			await apiClient.unregisterDiscussionWebPushBinding(threadId, subscription.endpoint);
 			isDiscussionBound = false;
-			onSuccess('이 스레드 인용 알림이 해지되었습니다.');
+			showFeedback('success', '이 스레드 인용 알림이 해지되었습니다.');
 		} catch (error) {
-			onError(error instanceof Error ? error.message : '스레드 인용 알림 해지에 실패했습니다.');
+			showFeedback(
+				'error',
+				error instanceof Error ? error.message : '스레드 인용 알림 해지에 실패했습니다.'
+			);
 		} finally {
 			isSubmitting = false;
 		}
@@ -270,7 +295,7 @@
 	async function unsubscribeBrowserPush() {
 		if (isSubmitting || !isSupported || !isSubscribed) return;
 
-		onClearMessage();
+		clearFeedback();
 		isSubmitting = true;
 
 		try {
@@ -283,9 +308,12 @@
 			isNoticeNotificationsEnabled = false;
 			isDiscussionBound = false;
 			await refreshDebugState(null);
-			onSuccess('모든 웹 푸시 구독이 해지되었습니다.');
+			showFeedback('success', '모든 웹 푸시 구독이 해지되었습니다.');
 		} catch (error) {
-			onError(error instanceof Error ? error.message : '웹 푸시 구독 해지에 실패했습니다.');
+			showFeedback(
+				'error',
+				error instanceof Error ? error.message : '웹 푸시 구독 해지에 실패했습니다.'
+			);
 		} finally {
 			isSubmitting = false;
 		}
@@ -338,6 +366,19 @@
 				로그인 없이 현재 브라우저 단위로 구독됩니다.
 			</li>
 		</ul>
+	{/if}
+
+	{#if showInlineFeedback && feedback}
+		<div
+			class={`mb-4 rounded-lg border p-3 text-sm ${
+				feedback.type === 'success'
+					? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+					: 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+			}`}
+			role={feedback.type === 'error' ? 'alert' : 'status'}
+		>
+			{feedback.message}
+		</div>
 	{/if}
 
 	{#if isLoading}
@@ -412,7 +453,7 @@
 				</div>
 			</section>
 
-			{#if showFullUnsubscribeControl}
+			{#if showFullUnsubscribeControl && isSubscribed}
 				<div class="mt-4 rounded-xl border border-(--lc-border-soft) px-4 py-3">
 					<button
 						type="button"
@@ -502,20 +543,6 @@
 				metricsSpacingClass="mt-2"
 			/>
 		{/if}
-
-		<p class="lc-text-muted mt-3 text-sm">
-			현재 상태: {threadId !== undefined
-				? isDiscussionBound
-					? '이 스레드 인용 알림 활성화됨'
-					: isSubscribed
-						? '브라우저 구독됨, 이 스레드 미연결'
-						: '비활성화됨'
-				: isNoticeNotificationsEnabled
-					? '입법예고 알림 활성화됨'
-					: isSubscribed
-						? '브라우저 구독됨, 입법예고 알림 꺼짐'
-						: '비활성화됨'}
-		</p>
 
 		{#if dev}
 			<div class="mt-4 rounded-xl border border-slate-300/70 bg-slate-50/70 p-3 text-xs">
